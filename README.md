@@ -27,6 +27,26 @@ prompt ──► TaskClassifier ──► Router (score / prompt-embedding / tas
 - **Gateway** (`portal_dispatch.gateway`): OpenAI-compatible `/v1/chat/completions` FastAPI app with JSONL decision traces.
 - **Eval** (`portal_dispatch.eval`): policy stats, bootstrap CIs, Pareto plots, and a machine-checkable kill-criteria gate (default: ≥15% savings at ≤3 pp accuracy drop).
 
+## Production gateway
+
+Beyond the research pipeline, `portal_dispatch.serve` is a production-oriented OpenAI-compatible gateway with config-not-code routing:
+
+```bash
+portal-dispatch serve --config configs/routes.example.yaml
+```
+
+- **Per-route YAML policies** — candidate models, floor, quality/fallback order, default model.
+- **Commercial-model tier** via LiteLLM (`portal_dispatch.backends.LiteLLMBackend`): OpenAI, Anthropic, Together, Gemini, ... with real $/token cost from price tables. Local PorTAL-served bases plug into the same seam (`PortalLocalBackend`).
+- **Shadow mode** — log every routing decision but always serve the default model; the zero-risk on-ramp: measure would-be savings before flipping live.
+- **Fallback chains** — on backend failure the request walks `fallback_order`; failures are recorded in the trace.
+- **API keys** — optional bearer-token auth.
+- **Abstain-to-capable** — in task-agnostic mode, low task-classifier confidence routes to the default model, so classifier mistakes cost money, never quality.
+- **Continuous learning** (`portal_dispatch.learning`) — retrain the prompt router from labeled production traces into versioned, canary-able artifacts (`retrain_from_traces`).
+
+Every request emits a JSONL decision trace: route, decision + reason + scores, served model, fallbacks tried, cost (USD), latency, token counts.
+
+Validated live against Together AI serverless models (Qwen2.5-7B as cheap, Llama-3.3-70B as capable): shadow mode logs `decision=cheap, served=capable`; live mode serves the cheap model at ~3.4× lower measured cost per request.
+
 ## Install
 
 ```bash

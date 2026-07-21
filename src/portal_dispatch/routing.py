@@ -151,6 +151,11 @@ class TaskClassifier:
     def predict(self, prompts: list[str]) -> list[str]:
         return list(self.model.predict(self._encode(prompts)))
 
+    def confidence(self, prompts: list[str]) -> list[float]:
+        """Max class probability per prompt — the abstain-to-capable signal."""
+        probs = self.model.predict_proba(self._encode(prompts))
+        return [float(p.max()) for p in probs]
+
     def accuracy(self, prompts: list[str], tasks: list[str]) -> float:
         preds = self.predict(prompts)
         return float(np.mean([p == t for p, t in zip(preds, tasks)]))

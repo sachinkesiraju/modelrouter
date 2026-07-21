@@ -1,0 +1,22 @@
+# Example production gateway config.
+# Run: portal-dispatch serve --config configs/routes.example.yaml
+api_keys: []   # empty = open; else list of accepted bearer tokens
+
+routes:
+  default:
+    shadow_mode: true          # log routing decisions but always serve default_model
+    default_model: capable
+    floor: 1.2
+    abstain_below: 0.55        # abstain-to-capable when task classifier is unsure
+    fallback_order: [capable, cheap]
+    models:
+      - name: cheap
+        backend: litellm
+        model: together_ai/Qwen/Qwen2.5-7B-Instruct-Turbo
+        price_per_1k_input: 0.0003
+        price_per_1k_output: 0.0003
+      - name: capable
+        backend: litellm
+        model: together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo
+        price_per_1k_input: 0.00088
+        price_per_1k_output: 0.00088
