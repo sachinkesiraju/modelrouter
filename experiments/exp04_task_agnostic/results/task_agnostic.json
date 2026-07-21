@@ -1,0 +1,65 @@
+{
+  "n_test": 1230,
+  "costs": {
+    "cheap": 1.0,
+    "mid": 2.83,
+    "capable": 6.67
+  },
+  "task_classifier_accuracy": 0.7373983739837399,
+  "task_tier_map": {
+    "arc_challenge": "mid",
+    "arc_easy": "capable",
+    "boolq": "mid",
+    "cb": "mid",
+    "commonsense_qa": "mid",
+    "copa": "capable",
+    "hellaswag": "capable",
+    "openbookqa": "mid",
+    "rte": "mid",
+    "sciq": "capable",
+    "truthfulqa": "mid",
+    "wic": "capable",
+    "winogrande": "capable",
+    "wsc": "mid"
+  },
+  "always_capable": {
+    "accuracy": 0.708130081300813,
+    "savings": 0.0
+  },
+  "known_task_routing": {
+    "accuracy": 0.7105691056910569,
+    "savings": 0.3182798844480199
+  },
+  "task_agnostic_by_abstain_threshold": {
+    "0.0": {
+      "accuracy": 0.7130081300813008,
+      "savings": 0.3182798844480199,
+      "abstain_frac": 0.0
+    },
+    "0.3": {
+      "accuracy": 0.7154471544715447,
+      "savings": 0.22560427103521408,
+      "abstain_frac": 0.26097560975609757
+    },
+    "0.5": {
+      "accuracy": 0.7154471544715447,
+      "savings": 0.0889311441840056,
+      "abstain_frac": 0.6504065040650406
+    },
+    "0.55": {
+      "accuracy": 0.7146341463414634,
+      "savings": 0.06693238746480423,
+      "abstain_frac": 0.71869918699187
+    },
+    "0.7": {
+      "accuracy": 0.7154471544715447,
+      "savings": 0.026679343255201715,
+      "abstain_frac": 0.8585365853658536
+    },
+    "0.9": {
+      "accuracy": 0.708130081300813,
+      "savings": 0.0,
+      "abstain_frac": 0.9975609756097561
+    }
+  }
+}
