@@ -2,9 +2,9 @@ import numpy as np
 from fastapi.testclient import TestClient
 from portallib import ChoiceExample
 
-from portal_dispatch.dispatch import BaseSpec
-from portal_dispatch.gateway import create_app
-from portal_dispatch.tracing import TraceJournal
+from modelrouter.dispatch import BaseSpec
+from modelrouter.gateway import create_app
+from modelrouter.tracing import TraceJournal
 
 
 class MockBackend:
@@ -48,7 +48,7 @@ def test_gateway_routes_and_traces(tmp_path):
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["portal_dispatch"]["chosen"] == "cheap"
+    assert body["modelrouter"]["chosen"] == "cheap"
     assert body["choices"][0]["message"]["content"] == " Yes"
 
     traces = journal.read()

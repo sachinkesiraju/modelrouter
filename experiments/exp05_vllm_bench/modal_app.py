@@ -14,9 +14,9 @@ import json
 
 import modal
 
-app = modal.App("portal-dispatch-vllm")
+app = modal.App("modelrouter-vllm")
 
-volume = modal.Volume.from_name("portal-dispatch", create_if_missing=True)
+volume = modal.Volume.from_name("modelrouter", create_if_missing=True)
 VOL = "/vol"
 
 image = (

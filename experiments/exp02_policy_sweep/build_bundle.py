@@ -13,8 +13,8 @@ from pathlib import Path
 import joblib
 from portallib import ChoiceDataset
 
-from portal_dispatch.data import make_splits
-from portal_dispatch.runtime import HFBackend
+from modelrouter.data import make_splits
+from modelrouter.runtime import HFBackend
 
 HERE = Path(__file__).parent
 

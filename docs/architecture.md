@@ -4,19 +4,19 @@
 client (OpenAI SDK)
    │
    ▼
-Gateway (/v1/chat/completions)        portal_dispatch.gateway
+Gateway (/v1/chat/completions)        modelrouter.gateway
    │  task = caller-supplied or TaskClassifier(prompt)
    ▼
-Router                                 portal_dispatch.routing
+Router                                 modelrouter.routing
    │  p_correct per registered base (prompt embeddings on the hot path)
    ▼
-DispatchPolicy                         portal_dispatch.dispatch
+DispatchPolicy                         modelrouter.dispatch
    │  cheapest base with p * floor >= max p   (or cascade + escalation)
    ▼
-Backend                                portal_dispatch.runtime
+Backend                                modelrouter.runtime
    │  PortalModel.generate(task) → PortalInjector.activate → forward
    ▼
-TraceJournal                           portal_dispatch.tracing
+TraceJournal                           modelrouter.tracing
       JSONL: prompt, task, candidates, chosen, reason, scores
 ```
 

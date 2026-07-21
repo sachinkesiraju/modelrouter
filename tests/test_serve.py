@@ -2,10 +2,10 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from portal_dispatch.backends import Completion
-from portal_dispatch.learning import label_traces, retrain_from_traces
-from portal_dispatch.serve import GatewayConfig, create_production_app
-from portal_dispatch.tracing import TraceJournal
+from modelrouter.backends import Completion
+from modelrouter.learning import label_traces, retrain_from_traces
+from modelrouter.serve import GatewayConfig, create_production_app
+from modelrouter.tracing import TraceJournal
 
 CONFIG_YAML = """
 api_keys: ["secret-key"]
@@ -72,8 +72,8 @@ def test_shadow_mode_serves_default_but_logs_decision(tmp_path):
     resp = client.post("/v1/chat/completions", headers=AUTH,
                        json={"messages": [{"role": "user", "content": "hi"}]})
     body = resp.json()
-    assert body["portal_dispatch"]["served"] == "capable"       # shadow: default served
-    assert body["portal_dispatch"]["decision"] == "cheap"        # but router chose cheap
+    assert body["modelrouter"]["served"] == "capable"       # shadow: default served
+    assert body["modelrouter"]["decision"] == "cheap"        # but router chose cheap
     assert backends["capable"].calls == 1 and backends["cheap"].calls == 0
     trace = journal.read()[0]
     assert trace["decision"] == "cheap" and trace["served"] == "capable" and trace["shadow_mode"]
@@ -84,7 +84,7 @@ def test_live_mode_serves_router_choice(tmp_path):
     client = TestClient(app)
     body = client.post("/v1/chat/completions", headers=AUTH,
                        json={"messages": [{"role": "user", "content": "hi"}]}).json()
-    assert body["portal_dispatch"]["served"] == "cheap"
+    assert body["modelrouter"]["served"] == "cheap"
     assert backends["cheap"].calls == 1
 
 
@@ -93,7 +93,7 @@ def test_fallback_chain_on_backend_failure(tmp_path):
     client = TestClient(app)
     body = client.post("/v1/chat/completions", headers=AUTH,
                        json={"messages": [{"role": "user", "content": "hi"}]}).json()
-    assert body["portal_dispatch"]["served"] == "capable"
+    assert body["modelrouter"]["served"] == "capable"
     assert backends["cheap"].calls == 1 and backends["capable"].calls == 1
     assert journal.read()[0]["fallbacks_tried"] == ["cheap"]
 
@@ -130,8 +130,8 @@ def test_abstain_to_capable_on_low_task_confidence(tmp_path):
     body = client.post("/v1/chat/completions", headers=AUTH,
                        json={"messages": [{"role": "user", "content": "hi"}]}).json()
     # Router prefers cheap, but low task confidence abstains to the default model.
-    assert body["portal_dispatch"]["decision"] == "capable"
-    assert "abstain" in body["portal_dispatch"]["reason"]
+    assert body["modelrouter"]["decision"] == "capable"
+    assert "abstain" in body["modelrouter"]["reason"]
 
 
 def test_retrain_from_traces(tmp_path):

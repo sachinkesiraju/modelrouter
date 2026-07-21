@@ -14,11 +14,11 @@ from pathlib import Path
 import numpy as np
 from portallib import ChoiceDataset, ChoiceExample
 
-from portal_dispatch.data import make_splits
-from portal_dispatch.routing import TaskClassifier
-from portal_dispatch.runtime import HFBackend
-from portal_dispatch.eval import policy_stats
-from portal_dispatch.tracing import TraceJournal
+from modelrouter.data import make_splits
+from modelrouter.routing import TaskClassifier
+from modelrouter.runtime import HFBackend
+from modelrouter.eval import policy_stats
+from modelrouter.tracing import TraceJournal
 
 HERE = Path(__file__).parent
 

@@ -192,7 +192,7 @@ def create_production_app(
             task_classifier=task_classifier,
         )
 
-    app = FastAPI(title="portal-dispatch gateway")
+    app = FastAPI(title="modelrouter gateway")
 
     def check_key(authorization: str | None) -> None:
         if not config.api_keys:
@@ -225,7 +225,7 @@ def create_production_app(
             "usage": {"prompt_tokens": completion.input_tokens,
                       "completion_tokens": completion.output_tokens,
                       "total_tokens": completion.input_tokens + completion.output_tokens},
-            "portal_dispatch": {
+            "modelrouter": {
                 "route": route_name,
                 "decision": decision.chosen,
                 "reason": decision.reason,

@@ -6,7 +6,7 @@
 - Target: `Qwen/Qwen3-0.6B` in bfloat16 with gradient checkpointing (fits the 8 GB CPU box; a
   float32 run without checkpointing was OOM-killed at ~7.3 GB RSS).
 - Data: 14 tasks from `RampPublic/portallib-tasks`, 20 train examples/task, deterministic seed-0
-  splits (`portal_dispatch.data.make_splits`), 3 epochs, batch size 2.
+  splits (`modelrouter.data.make_splits`), 3 epochs, batch size 2.
 
 ## Results
 

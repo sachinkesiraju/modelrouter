@@ -102,7 +102,7 @@ def plot_pareto(stats: list[PolicyStats], path: str) -> None:
                     textcoords="offset points")
     ax.set_xlabel("cost savings (%)")
     ax.set_ylabel("accuracy (%)")
-    ax.set_title("portal-dispatch policy frontier")
+    ax.set_title("modelrouter policy frontier")
     ax.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(path, dpi=150)

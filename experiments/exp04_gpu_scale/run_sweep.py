@@ -9,7 +9,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 
-from portal_dispatch.sweep import run_policy_sweep
+from modelrouter.sweep import run_policy_sweep
 
 HERE = Path(__file__).parent
 

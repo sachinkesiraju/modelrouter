@@ -1,8 +1,8 @@
 import numpy as np
 
-from portal_dispatch.dispatch import BaseSpec, CascadePolicy, FloorPolicy
-from portal_dispatch.eval import bootstrap_ci, check_kill_criteria, policy_stats
-from portal_dispatch.routing import LatentRouter, PromptEmbeddingRouter, ScoreRouter, score_features
+from modelrouter.dispatch import BaseSpec, CascadePolicy, FloorPolicy
+from modelrouter.eval import bootstrap_ci, check_kill_criteria, policy_stats
+from modelrouter.routing import LatentRouter, PromptEmbeddingRouter, ScoreRouter, score_features
 
 BASES = [BaseSpec("cheap", 1.0), BaseSpec("capable", 2.0)]
 

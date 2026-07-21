@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from portal_dispatch.eval import plot_pareto
-from portal_dispatch.sweep import run_policy_sweep
+from modelrouter.eval import plot_pareto
+from modelrouter.sweep import run_policy_sweep
 
 HERE = Path(__file__).parent
 

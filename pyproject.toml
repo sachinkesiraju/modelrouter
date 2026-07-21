@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "portal-dispatch"
+name = "modelrouter"
 version = "0.1.0"
 description = "Route each query to the cheapest base model that can do the job, materializing the task adapter at runtime from a shared PorTAL latent."
 readme = "README.md"
@@ -27,10 +27,10 @@ plots = ["matplotlib>=3.8"]
 dev = ["pytest>=8.0", "ruff>=0.4", "mypy>=1.10", "httpx>=0.27"]
 
 [project.scripts]
-portal-dispatch = "portal_dispatch.cli:main"
+modelrouter = "modelrouter.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/portal_dispatch"]
+packages = ["src/modelrouter"]
 
 [tool.ruff]
 line-length = 110

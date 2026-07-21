@@ -1,5 +1,5 @@
 # Example production gateway config.
-# Run: portal-dispatch serve --config configs/routes.example.yaml
+# Run: modelrouter serve --config configs/routes.example.yaml
 api_keys: []   # empty = open; else list of accepted bearer tokens
 
 routes:

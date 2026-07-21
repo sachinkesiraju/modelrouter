@@ -1,6 +1,6 @@
-# portal-dispatch → Production Inference Router: Productization & Engineering Roadmap
+# modelrouter → Production Inference Router: Productization & Engineering Roadmap
 
-*Prepared 2026-07-21. Based on `portal_dispatch_plan.md`, `experiments/exp01_cpu_smoke/report.md`, and `experiments/exp02_cpu_policy_sweep/report.md`.*
+*Prepared 2026-07-21. Based on `modelrouter_plan.md`, `experiments/exp01_cpu_smoke/report.md`, and `experiments/exp02_cpu_policy_sweep/report.md`.*
 
 ---
 
@@ -10,7 +10,7 @@
 - **Task-agnostic mode is not viable yet.** With a 75%-accurate task classifier, the 0.6B refit collapses (−10.7 pp at 30.7% savings). The bottleneck is task-classifier error × cheap-base fragility, not the base router.
 - **Prompt-only routing is safe but conservative** (13.5% savings, −3.3 pp at δ=0; 1–5% savings at ≤2.5 pp in the ablation). The task latent `z` predicts per-task cheap-is-good-enough at 78.6% LOO — a genuine zero-shot routing signal nobody else has.
 - **Materialization overhead is a non-issue** (~50–60 ms, <1% per forward), so the runtime-LoRA story is technically credible.
-- **What exists as code:** typed `src/portal_dispatch/{routing,dispatch,runtime,eval,data,tracing,refit}` modules, HF backend, vLLM backend stub, FastAPI OpenAI-compatible gateway stub, Oracle builder, kill-criteria checker, CI + Docker skeletons, two reproducible experiments.
+- **What exists as code:** typed `src/modelrouter/{routing,dispatch,runtime,eval,data,tracing,refit}` modules, HF backend, vLLM backend stub, FastAPI OpenAI-compatible gateway stub, Oracle builder, kill-criteria checker, CI + Docker skeletons, two reproducible experiments.
 
 **Strategic implication:** the near-term product is a **known-skill router** (caller supplies or route implies the task), not a magic universal router. That is also exactly how real customers integrate (per-endpoint/per-route policies), so it is a feature, not a concession.
 
@@ -32,7 +32,7 @@
 
 ### 1.2 Differentiation vs Ramp Router
 
-| Axis | Ramp Router | portal-dispatch MVP |
+| Axis | Ramp Router | modelrouter MVP |
 |---|---|---|
 | Candidate pool | Frontier/commercial API models only | Commercial APIs **plus your own LoRA-served open models** — the cheap tier can be a model you own at marginal GPU cost |
 | Quality grounding | Ramp's internal benchmark | **Your** private oracle built from your traffic + graders, versioned and re-runnable |
@@ -41,7 +41,7 @@
 | Routing signal | Proprietary | Open, inspectable routers (score / prompt-embedding / task-latent `z`), retrainable on your labels |
 | Zero-shot task routing | — | `z`-latent predicts base suitability for *unseen tasks* (78.6% LOO) — unique research moat |
 
-One-line positioning: **"Ramp Router routes across models you rent; portal-dispatch also routes into models you own — and materializes the right skill on them at runtime."**
+One-line positioning: **"Ramp Router routes across models you rent; modelrouter also routes into models you own — and materializes the right skill on them at runtime."**
 
 ---
 
@@ -152,7 +152,7 @@ Cumulative to a sellable P2 product: **~4 months, 2 engineers** (plus ~$1–2k G
 ## 7. Concrete next 3 actions for the parent session
 
 1. **Run the P0/G-B decisive experiment now** (it gates everything): provision 1× A100-80GB spot (~$2/hr, ≤$300 budget), refit/align Qwen3 1.7B/4B/8B with 300/100/100 splits, run B1 (independent-LoRA baseline) and B2 (oracle headroom) *first*, then the router sweeps, and produce `experiments/exp03_gpu_scale/report.md` with the machine-checked kill-criteria verdict (≥15% savings at ≤3 pp drop; refit non-random; vLLM swap <10% latency).
-2. **Finish the P1 data-plane skeleton in parallel** (independent of P0's outcome): wire `LiteLLMBackend` behind the `Backend` seam, harden the gateway (streaming, API keys, fallback chains, per-route YAML policies with quality_bar/max_latency/allowed_models), and land shadow-mode routing + full JSONL decision traces so any workload can be measured without risk. Ship as `portal-dispatch serve --config routes.yaml`.
+2. **Finish the P1 data-plane skeleton in parallel** (independent of P0's outcome): wire `LiteLLMBackend` behind the `Backend` seam, harden the gateway (streaming, API keys, fallback chains, per-route YAML policies with quality_bar/max_latency/allowed_models), and land shadow-mode routing + full JSONL decision traces so any workload can be measured without risk. Ship as `modelrouter serve --config routes.yaml`.
 3. **Recruit 1–2 design partners and build their private oracle**: pick a real high-volume workload (internal agent traffic — e.g. longhaul's inference plane is a natural first tenant — or an external partner), capture 1–2k prompts with graders, run the shadow-mode savings report, and use it to validate both the quality-bar UX and the R3/R8 questions (does the self-hosted tier win; who is the buyer).
 
 ---

@@ -1,4 +1,4 @@
-# Plan: `portal-dispatch` — Dynamic Adapter Dispatch for Multi-Agent Systems
+# Plan: `modelrouter` — Dynamic Adapter Dispatch for Multi-Agent Systems
 
 Turning the Phase 1 CPU results (PorTAL cross-size refit + per-query routing on Qwen3 0.6B/1.7B) into (1) a verified open-source repo and (2) a publishable research contribution.
 
@@ -6,7 +6,7 @@ Turning the Phase 1 CPU results (PorTAL cross-size refit + per-query routing on 
 
 ## 1. Repo name and scope
 
-**Name:** `portal-dispatch` (working alternates: `adaptive-dispatch`, `latent-router`). Tagline: *"Route each query to the cheapest base model that can do the job — materializing the task adapter at runtime from a shared PorTAL latent."*
+**Name:** `modelrouter` (working alternates: `adaptive-dispatch`, `latent-router`). Tagline: *"Route each query to the cheapest base model that can do the job — materializing the task adapter at runtime from a shared PorTAL latent."*
 
 **In scope**
 - Multi-base PorTAL training, refit, and adapter materialization (builds on `portallib`, which stays a dependency, not a fork).
@@ -29,7 +29,7 @@ Turning the Phase 1 CPU results (PorTAL cross-size refit + per-query routing on 
 
 Ramp recently launched **Ramp Router**, an OpenAI-compatible endpoint that tests new models on real work, routes each request to the cheapest model that clears the bar, and makes 100+ calls per request on what to cache, when to batch, and when to reach for something stronger. Their alpha group routes 2.75T tokens/month at 99.99% uptime, cutting costs 30%+ while keeping output quality the same or better. This validates the market need but the public product routes across already-deployed frontier/commercial models (GPT, Claude, Gemini, etc.).
 
-`portal-dispatch` takes the same cost-quality routing principle and applies it at the **task-adapter level**: instead of picking among fixed API models, it materializes the right LoRA for the task on the chosen base model on demand. The same ideas — per-request routing, dynamic escalation, caching, batching, and an OpenAI-compatible gateway — are folded into the runtime and research stack.
+`modelrouter` takes the same cost-quality routing principle and applies it at the **task-adapter level**: instead of picking among fixed API models, it materializes the right LoRA for the task on the chosen base model on demand. The same ideas — per-request routing, dynamic escalation, caching, batching, and an OpenAI-compatible gateway — are folded into the runtime and research stack.
 
 ### 1.2 What Ramp Router reveals about how to train/build our own router
 
@@ -37,7 +37,7 @@ From Ramp's public docs and benchmark work, the high-level training/operations l
 
 1. **Ground quality in a private, production-derived benchmark, not public leaderboards.**
    - Ramp built **Ramp SWE-Bench** from real merged PRs in its own codebase to avoid contamination and metric saturation.
-   - For `portal-dispatch`, the equivalent is a fixed, versioned task suite (e.g., `portallib-tasks`) plus user-contributed JSONL tasks, evaluated by an automated judge (MC accuracy / EM / F1) rather than vibes.
+   - For `modelrouter`, the equivalent is a fixed, versioned task suite (e.g., `portallib-tasks`) plus user-contributed JSONL tasks, evaluated by an automated judge (MC accuracy / EM / F1) rather than vibes.
    - Clue: train the router on *real task outcomes*, not model perplexity or generic benchmarks.
 
 2. **Decision loop is: ingest → evaluate candidates → apply a user-set quality bar → rank survivors by cost/latency → select → fallback if needed.**
@@ -47,12 +47,12 @@ From Ramp's public docs and benchmark work, the high-level training/operations l
 
 3. **Approved-model allowlist with tiers.**
    - Ramp docs list tiers: frontier, mid-tier, lightweight.
-   - For `portal-dispatch`, the allowlist is the set of bases we have `PortalAlignment` for, and the tiers map to model families/sizes.
+   - For `modelrouter`, the allowlist is the set of bases we have `PortalAlignment` for, and the tiers map to model families/sizes.
    - Clue: the router should never invent a base; it only chooses among registered, aligned bases.
 
 4. **Policy is config, not code.**
    - Ramp lets users set `production`/`draft`/numeric quality bars, approved models, and fallback chains in a dashboard/config update without redeploying the app.
-   - For `portal-dispatch`, keep policies as YAML (`quality_bar`, `max_latency_ms`, `allowed_bases`, `fallback_order`) so the same binary can serve multiple SLOs.
+   - For `modelrouter`, keep policies as YAML (`quality_bar`, `max_latency_ms`, `allowed_bases`, `fallback_order`) so the same binary can serve multiple SLOs.
 
 5. **Heavy observability and continuous re-evaluation.**
    - Ramp exposes decision traces (candidates, pass/fail, reason, fallback), spend views, and alerts.
@@ -61,7 +61,7 @@ From Ramp's public docs and benchmark work, the high-level training/operations l
 
 6. **Routing is more than model selection.**
    - Ramp's launch thread mentions "100+ calls per request on what to cache, when to batch, when to reach for something stronger."
-   - For `portal-dispatch`, extend the policy engine with cache-hit decisions, batching windows, and escalation triggers — but make them pluggable.
+   - For `modelrouter`, extend the policy engine with cache-hit decisions, batching windows, and escalation triggers — but make them pluggable.
 
 **Bottom line for training our own router:**
 - Offline phase: evaluate every registered base on the private task suite to get per-(task, query, base) correctness scores.
@@ -75,22 +75,22 @@ From Ramp's public docs and benchmark work, the high-level training/operations l
 
 The user has a related project, `sachinkesiraju/longhaul`, whose execution runtime already separates an **inference plane** (`src/ttr/serve`) from the agent control plane. We can reuse several concepts:
 
-- **Inference plane:** `longhaul` manages LLM cost, deadlines, and prefix caching. `portal-dispatch` runtime can be the same layer: it accepts a completion request, classifies task, routes to a base, materializes the adapter, and returns the result, while reporting cost/latency back to the caller.
-- **Completion windows / latency tiers:** `longhaul` uses tiers like `asap`, `priority`, `standard`, `flex`. `portal-dispatch` policies can expose `max_latency_ms` and quality-bar presets (`production`, `draft`, `interactive`, `batch`) that map to those tiers.
-- **Prefix amortization / prefix-cache:** `longhaul` reuses KV-cache across parallel shards. `portal-dispatch` vLLM backend should keep an LRU of materialized `(base, task)` LoRAs and prefix-cache hits so repeated queries for the same task avoid decoder and adapter-materialization cost.
-- **Seam abstraction:** `longhaul` abstracts LLM/VM backends. In `portal-dispatch` this is the `Backend` seam: HF Transformers (reference), vLLM (performance), and a stub/mock backend for unit tests.
-- **Durable execution / EntityStore:** `longhaul` journals steps and stores business entities outside agent state. For `portal-dispatch`, the equivalent is durable routing traces and a registry of tasks, bases, alignments, and artifacts in a SQLite/JSONL store, so the router can be retrained and policies audited without re-running the whole stack.
-- **Cost-aware scheduling:** `longhaul` schedules inference by cost and deadline. `portal-dispatch` policy engine is the scheduler: `min cost` s.t. `quality >= bar` and `latency <= SLO`.
+- **Inference plane:** `longhaul` manages LLM cost, deadlines, and prefix caching. `modelrouter` runtime can be the same layer: it accepts a completion request, classifies task, routes to a base, materializes the adapter, and returns the result, while reporting cost/latency back to the caller.
+- **Completion windows / latency tiers:** `longhaul` uses tiers like `asap`, `priority`, `standard`, `flex`. `modelrouter` policies can expose `max_latency_ms` and quality-bar presets (`production`, `draft`, `interactive`, `batch`) that map to those tiers.
+- **Prefix amortization / prefix-cache:** `longhaul` reuses KV-cache across parallel shards. `modelrouter` vLLM backend should keep an LRU of materialized `(base, task)` LoRAs and prefix-cache hits so repeated queries for the same task avoid decoder and adapter-materialization cost.
+- **Seam abstraction:** `longhaul` abstracts LLM/VM backends. In `modelrouter` this is the `Backend` seam: HF Transformers (reference), vLLM (performance), and a stub/mock backend for unit tests.
+- **Durable execution / EntityStore:** `longhaul` journals steps and stores business entities outside agent state. For `modelrouter`, the equivalent is durable routing traces and a registry of tasks, bases, alignments, and artifacts in a SQLite/JSONL store, so the router can be retrained and policies audited without re-running the whole stack.
+- **Cost-aware scheduling:** `longhaul` schedules inference by cost and deadline. `modelrouter` policy engine is the scheduler: `min cost` s.t. `quality >= bar` and `latency <= SLO`.
 
-**Execution implication:** the first `portal-dispatch` runtime prototype can target the same architecture — an OpenAI-compatible server with a durable trace journal, adapter LRU, and policy-driven routing — so it is composable with `longhaul` agents later.
+**Execution implication:** the first `modelrouter` runtime prototype can target the same architecture — an OpenAI-compatible server with a durable trace journal, adapter LRU, and policy-driven routing — so it is composable with `longhaul` agents later.
 
 ---
 
 ## 2. Repo structure
 
 ```
-portal-dispatch/
-├── src/portal_dispatch/
+modelrouter/
+├── src/modelrouter/
 │   ├── training/        # PortalCore source training + per-base PortalAlignment training
 │   ├── refit/           # Refit published source artifacts to new target bases
 │   ├── routing/         # Score, prompt-embedding, and task-latent z routers
@@ -111,7 +111,7 @@ portal-dispatch/
 One-line purposes:
 | Dir | Purpose |
 |---|---|
-| `src/portal_dispatch/` | Installable library; everything importable and typed |
+| `src/modelrouter/` | Installable library; everything importable and typed |
 | `experiments/` | Frozen, reproducible experiment definitions producing the paper's tables/figures |
 | `configs/` | All hyperparameters/hardware/model lists as declarative YAML — no magic numbers in code |
 | `scripts/` | Thin CLI wrappers (`python scripts/dispatch.py --config ...`) |
@@ -124,7 +124,7 @@ One-line purposes:
 
 ## 3. Core modules and APIs
 
-### 3.1 Training (`portal_dispatch.training`)
+### 3.1 Training (`modelrouter.training`)
 ```python
 core = PortalCoreTrainer(config).train(task_suite)          # source-train canonical hypernetwork + task_latents
 align = AlignmentTrainer(core, base="Qwen/Qwen3-4B").train() # thin per-base decoder
@@ -134,7 +134,7 @@ artifact.save_pretrained("org/portal-qwen3-4b")             # HF-compatible
 - Wraps `portallib` `PortalModel`; adds multi-base alignment management, checkpointing, W&B logging.
 - Config-driven: rank, target modules (q/v default), epochs, examples/task, dtype.
 
-### 3.2 Refit (`portal_dispatch.refit`)
+### 3.2 Refit (`modelrouter.refit`)
 ```python
 refitter = PortalRefitter.from_pretrained("RampPublic/portal-qwen3-1.7b")
 new_artifact = refitter.refit(target_base="Qwen/Qwen3-0.6B", examples_per_task=200, epochs=3)
@@ -142,7 +142,7 @@ new_artifact = refitter.refit(target_base="Qwen/Qwen3-0.6B", examples_per_task=2
 - Direct productization of `PortalAdapterRefitter` + the Phase 1 `phase1_qwen_cpu_*.py` refit script.
 - Memory-aware: gradient accumulation + streaming dataset to respect the documented 8 GB CPU ceiling; auto-selects batch size from available RAM/VRAM.
 
-### 3.3 Routers (`portal_dispatch.routing`)
+### 3.3 Routers (`modelrouter.routing`)
 Common interface:
 ```python
 class Router(Protocol):
@@ -167,7 +167,7 @@ PromptEmbeddingRouter().fit(oracle.embeddings, oracle.correctness)
 - All routers are trained to predict those labels; the dispatch policy then applies the user-configured quality bar and cost/latency ranking.
 - Traces mirror Ramp's observability: each request records candidates, per-base scores, pass/fail, chosen base, fallback, cost, and latency.
 
-### 3.4 Dispatch (`portal_dispatch.dispatch`)
+### 3.4 Dispatch (`modelrouter.dispatch`)
 ```python
 policy = DispatchPolicy(router=..., constraint=Constraint(max_quality_drop=0.03) | Constraint(max_cost=...))
 decision = policy.decide(query)          # pre-routing
@@ -176,7 +176,7 @@ cascade = CascadePolicy(order=[cheap, capable], escalation=LearnedEscalation(thr
 - Policy engine takes a **cost/latency/quality model per base** (from the oracle, §7) and solves the constrained choice; supports per-task floor, per-query threshold, cascade with learned escalation, and "always-X" baselines as degenerate policies.
 - All Phase 1 policies (floor 1.0–5.0, thresholds 0.2–0.9, delta sweeps, learned escalation 0.45/0.5) reproduce as config files.
 
-### 3.5 Runtime (`portal_dispatch.runtime`)
+### 3.5 Runtime (`modelrouter.runtime`)
 ```python
 rt = Runtime(backend="vllm" | "hf", bases=[...], artifact=artifact)
 out = rt.run(query, task=None)   # classify task if None → route → materialize LoRA → infer
@@ -186,7 +186,7 @@ out = rt.run(query, task=None)   # classify task if None → route → materiali
 - `Gateway`: OpenAI-compatible `/v1/completions` and `/v1/chat/completions` server that classifies the task, routes, materializes the adapter, and forwards to the selected backend. Supports optional prefix-cache hit optimization and small-batch request coalescing for throughput.
 - Instrumentation: per-stage timing (classify, route, materialize, forward, cache hit, batch size) emitted as JSONL.
 
-### 3.6 Evaluation harness (`portal_dispatch.eval`)
+### 3.6 Evaluation harness (`modelrouter.eval`)
 ```python
 report = Evaluator(suite, policies=[...]).run()   # accuracy, latency, cost per policy
 report.pareto_curve(x="cost_savings", y="rel_accuracy").save("figs/pareto.png")
@@ -265,7 +265,7 @@ report.check_kill_criteria(min_savings=0.15, max_quality_drop=0.03)
 
 ## 8. Artifact and model release plan
 
-**Published on Hugging Face (org: e.g. `portal-dispatch`):**
+**Published on Hugging Face (org: e.g. `modelrouter`):**
 - `portal-qwen3-{1.7b,4b,8b}` PorTAL artifacts (core + latents + alignment) — `save_pretrained` format, Apache-2.0 (subject to Qwen license compatibility; adapters carry Qwen3's Apache-2.0 fine).
 - `router-prompt-minilm`, `router-latent-z` trained routers + task classifier.
 - `portallib-tasks-splits` dataset revision with the committed split manifests.
@@ -281,7 +281,7 @@ report.check_kill_criteria(min_savings=0.15, max_quality_drop=0.03)
 
 **Quickstart (one command):**
 ```bash
-pip install portal-dispatch && portal-dispatch demo --config configs/demo_cpu.yaml
+pip install modelrouter && modelrouter demo --config configs/demo_cpu.yaml
 # downloads the 0.6B/1.7B artifacts + routers, dispatches 20 sample queries,
 # prints the accuracy/cost table and saves a Pareto plot
 ```
@@ -355,9 +355,9 @@ README sections: badges (CI, PyPI, HF), 60-second pitch + headline Pareto figure
 ## 13. How the plan uses the attached CPU results
 
 **Directly reusable (port into `src/` in S1):**
-- Refit code path (`PortalAdapterRefitter` usage, 20-ex/3-epoch config) → `portal_dispatch.refit` + CPU smoke fixture.
-- Router feature extraction + logistic/MLP training from `phase1_qwen_cpu_extras.py` and `prompt_router_*` → `portal_dispatch.routing`.
-- End-to-end pipeline (`phase1_qwen_cpu_end_to_end*.py`) → `portal_dispatch.runtime` HF backend.
+- Refit code path (`PortalAdapterRefitter` usage, 20-ex/3-epoch config) → `modelrouter.refit` + CPU smoke fixture.
+- Router feature extraction + logistic/MLP training from `phase1_qwen_cpu_extras.py` and `prompt_router_*` → `modelrouter.routing`.
+- End-to-end pipeline (`phase1_qwen_cpu_end_to_end*.py`) → `modelrouter.runtime` HF backend.
 - Policy sweeps + result JSONs (`eval_results.json`, `dispatch_results.json`, `perquery_dispatch.json`, `cascade_policy.json`, etc.) → committed as `experiments/exp01_cpu_smoke/expected/` regression baselines.
 - `materialization_timing.json` methodology → the overhead benchmark script.
 
@@ -372,14 +372,14 @@ README sections: badges (CI, PyPI, HF), 60-second pitch + headline Pareto figure
 ## 14. Execution log
 
 **2026-07-18 — S1 scaffold + first modules landed:**
-- Created `portal-dispatch` repo with `pyproject.toml` (hatchling + uv-ready), `README.md`, declarative `configs/smoke_cpu.yaml`, and `src/portal_dispatch/{data,routing,dispatch,runtime,eval,tracing}` packages.
+- Created `modelrouter` repo with `pyproject.toml` (hatchling + uv-ready), `README.md`, declarative `configs/smoke_cpu.yaml`, and `src/modelrouter/{data,routing,dispatch,runtime,eval,tracing}` packages.
 - Ported and generalized Phase 1 CPU logic into typed modules:
-  - `portal_dispatch.routing`: `ScoreRouter`, `PromptEmbeddingRouter`, `TaskClassifier`.
-  - `portal_dispatch.dispatch`: `FloorPolicy`, `CascadePolicy`, `BaseSpec`, `RoutingDecision`.
-  - `portal_dispatch.runtime`: `HFBackend`, `DispatchRuntime`, OpenAI-compatible `Gateway` (FastAPI), `TraceJournal`.
-  - `portal_dispatch.eval`: `Oracle` dataset builder for per-(query, base) correctness labels.
-  - `portal_dispatch.config`: YAML config loader via Pydantic.
-- Added CLI `portal-dispatch smoke` and a CPU smoke test (`scripts/smoke_test.py`) that trains a `ScoreRouter` from the pre-computed Phase 1 score bundle and evaluates floor/cascade policies.
+  - `modelrouter.routing`: `ScoreRouter`, `PromptEmbeddingRouter`, `TaskClassifier`.
+  - `modelrouter.dispatch`: `FloorPolicy`, `CascadePolicy`, `BaseSpec`, `RoutingDecision`.
+  - `modelrouter.runtime`: `HFBackend`, `DispatchRuntime`, OpenAI-compatible `Gateway` (FastAPI), `TraceJournal`.
+  - `modelrouter.eval`: `Oracle` dataset builder for per-(query, base) correctness labels.
+  - `modelrouter.config`: YAML config loader via Pydantic.
+- Added CLI `modelrouter smoke` and a CPU smoke test (`scripts/smoke_test.py`) that trains a `ScoreRouter` from the pre-computed Phase 1 score bundle and evaluates floor/cascade policies.
 - Smoke test results (208 examples, Qwen3-0.6B vs Qwen3-1.7B, floor=1.2):
   - `always_cheap`: 56.7% accuracy
   - `always_capable`: 66.8% accuracy
@@ -389,8 +389,8 @@ README sections: badges (CI, PyPI, HF), 60-second pitch + headline Pareto figure
 - README references Ramp Router and `longhaul`/`TTR` inference-plane concepts.
 
 **2026-07-18 — S2 CPU end-to-end + eval harness + Docker/CI:**
-- Ported the live HF materialization pipeline into `portal_dispatch.runtime.HFBackend` (`load`, `score_task`, `score_dataset`, `close`).
-- Implemented `portal_dispatch.eval` with `accuracy_from_scores`, `policy_stats`, `check_kill_criteria`, and `plot_pareto`.
+- Ported the live HF materialization pipeline into `modelrouter.runtime.HFBackend` (`load`, `score_task`, `score_dataset`, `close`).
+- Implemented `modelrouter.eval` with `accuracy_from_scores`, `policy_stats`, `check_kill_criteria`, and `plot_pareto`.
 - Created and ran `experiments/exp01_cpu_smoke/run.py`: full prompt → task classifier → `ScoreRouter` → dispatch policy → base model materialization → scoring, on `rte` and `cb` tasks (8 examples each).
 - Results on CPU (Qwen3-0.6B refit vs Qwen3-1.7B source):
   - Task classifier: 81.2% test accuracy.
@@ -413,7 +413,7 @@ README sections: badges (CI, PyPI, HF), 60-second pitch + headline Pareto figure
   - `floor` (floor=1.2): **75.0% accuracy**, **14.1% savings**, quality drop vs capable = 3.1 pp.
   - `cascade` (threshold=0.5): 59.4% accuracy, 50% savings.
   - Kill-criteria check: `floor` just misses both bars (savings 14.1% < 15%, drop 3.1 pp > 3 pp); `cascade` misses quality bar. This is near the Go/No-Go threshold and confirms the approach is in the right ballpark on CPU, but the decisive test still needs GPU scale and more data.
-- Added `portal_dispatch.refit` wrapper and `portal_dispatch.training` placeholder.
+- Added `modelrouter.refit` wrapper and `modelrouter.training` placeholder.
 
 **2026-07-18 — S4 robust policy sweep on full 208-example bundle:**
 - Created `experiments/exp02_cpu_policy_sweep/` with `run.py`, `plot_pareto.py`, `task_latent_router.py`, and `report.md`.

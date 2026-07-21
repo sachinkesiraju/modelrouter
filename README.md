@@ -1,10 +1,10 @@
-# portal-dispatch
+# modelrouter
 
 *Route each query to the cheapest model that can do the job — materializing the task adapter at runtime from a shared PorTAL latent.*
 
 Inspired by [Ramp Router](https://ramp.com/router) and Ramp's work on [cost-efficient LLM routing](https://builders.ramp.com/post/thompson-sampling-model-routing).
 
-![How portal-dispatch works](docs/assets/how-it-works.svg)
+![How modelrouter works](docs/assets/how-it-works.svg)
 
 A cost-aware inference router: predict which model can answer a query, pick the cheapest one that clears a quality bar, and generate the task-specific LoRA for that model on demand from a single [PorTAL](https://pypi.org/project/portallib/) artifact (~15 ms swap on vLLM).
 
@@ -38,7 +38,7 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu   # or your C
 pip install -e ".[serve,plots,dev]"
 
 # serve the gateway
-portal-dispatch serve --config configs/routes.example.yaml
+modelrouter serve --config configs/routes.example.yaml
 
 # reproduce the CPU validation (all public artifacts)
 python experiments/exp01_cpu_refit/run.py

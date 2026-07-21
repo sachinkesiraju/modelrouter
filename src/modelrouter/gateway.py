@@ -38,7 +38,7 @@ def create_app(
     from fastapi import FastAPI
 
     policy = policy or FloorPolicy(floor=1.2)
-    app = FastAPI(title="portal-dispatch gateway")
+    app = FastAPI(title="modelrouter gateway")
 
     @app.get("/v1/models")
     def models() -> dict[str, Any]:
@@ -64,7 +64,7 @@ def create_app(
         return {
             "object": "chat.completion",
             "model": decision.chosen,
-            "portal_dispatch": {"task": task, "chosen": decision.chosen, "reason": decision.reason},
+            "modelrouter": {"task": task, "chosen": decision.chosen, "reason": decision.reason},
             "choices": [{"index": 0, "message": {"role": "assistant", "content": answer},
                          "finish_reason": "stop"}],
         }

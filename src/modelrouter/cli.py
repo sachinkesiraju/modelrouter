@@ -6,7 +6,7 @@ import argparse
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="portal-dispatch")
+    parser = argparse.ArgumentParser(prog="modelrouter")
     sub = parser.add_subparsers(dest="command", required=True)
     smoke = sub.add_parser("smoke", help="Train routers from a precomputed score bundle and sweep policies.")
     smoke.add_argument("--bundle", required=True, help="Path to scores bundle (joblib).")

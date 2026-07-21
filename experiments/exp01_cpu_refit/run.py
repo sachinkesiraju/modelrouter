@@ -12,8 +12,8 @@ from pathlib import Path
 
 from portallib import ChoiceDataset
 
-from portal_dispatch.data import make_splits
-from portal_dispatch.refit import refit_artifact
+from modelrouter.data import make_splits
+from modelrouter.refit import refit_artifact
 
 HERE = Path(__file__).parent
 

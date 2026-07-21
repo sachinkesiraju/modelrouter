@@ -1,4 +1,4 @@
-"""portal-dispatch: cost-aware dispatch across bases with runtime-materialized PorTAL adapters."""
+"""modelrouter: cost-aware dispatch across bases with runtime-materialized PorTAL adapters."""
 
 from .dispatch import BaseSpec, CascadePolicy, FloorPolicy, RoutingDecision
 from .routing import LatentRouter, PromptEmbeddingRouter, ScoreRouter, TaskClassifier

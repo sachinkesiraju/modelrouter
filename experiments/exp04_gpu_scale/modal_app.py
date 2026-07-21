@@ -6,7 +6,7 @@ Stages (each a separate billed job; artifacts checkpointed to a Modal volume):
   modal run experiments/exp04_gpu_scale/modal_app.py::refit --target Qwen/Qwen3-0.6B --tag refit-0.6b
   modal run experiments/exp04_gpu_scale/modal_app.py::refit --target Qwen/Qwen3-4B --tag refit-4b
   modal run experiments/exp04_gpu_scale/modal_app.py::score --spec-json '...'
-  modal volume get portal-dispatch results/<name> ...
+  modal volume get modelrouter results/<name> ...
 """
 
 from __future__ import annotations
@@ -15,9 +15,9 @@ import json
 
 import modal
 
-app = modal.App("portal-dispatch-gpu")
+app = modal.App("modelrouter-gpu")
 
-volume = modal.Volume.from_name("portal-dispatch", create_if_missing=True)
+volume = modal.Volume.from_name("modelrouter", create_if_missing=True)
 VOL = "/vol"
 
 image = (
@@ -32,14 +32,14 @@ image = (
         "pyyaml>=6.0",
     )
     .env({"HF_HOME": f"{VOL}/hf", "TOKENIZERS_PARALLELISM": "false"})
-    .add_local_python_source("portal_dispatch")
+    .add_local_python_source("modelrouter")
 )
 
 
 def _load_splits(train_per_task: int, val_per_task: int, test_per_task: int):
     from portallib import ChoiceDataset
 
-    from portal_dispatch.data import make_splits
+    from modelrouter.data import make_splits
 
     suite = ChoiceDataset.from_hub("RampPublic/portallib-tasks")
     return make_splits(suite, train_per_task=train_per_task, val_per_task=val_per_task,
@@ -51,7 +51,7 @@ def _run_refit(source: str, target: str, tag: str, *, train_per_task: int, epoch
     import torch
     from portallib import ChoiceDataset
 
-    from portal_dispatch.refit import refit_artifact
+    from modelrouter.refit import refit_artifact
 
     assert torch.cuda.is_available(), "no CUDA device in container"
     print("GPU:", torch.cuda.get_device_name(0), flush=True)
@@ -90,7 +90,7 @@ def smoke() -> dict:
     os.makedirs(f"{VOL}/results", exist_ok=True)
     from portallib import ChoiceDataset
 
-    from portal_dispatch.refit import refit_artifact
+    from modelrouter.refit import refit_artifact
 
     import torch
 
@@ -138,7 +138,7 @@ def score(spec_json: str, val_per_task: int = 100, test_per_task: int = 100,
     import joblib
     import torch
 
-    from portal_dispatch.scoring import build_score_bundle
+    from modelrouter.scoring import build_score_bundle
 
     assert torch.cuda.is_available()
     os.makedirs(f"{VOL}/results", exist_ok=True)
