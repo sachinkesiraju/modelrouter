@@ -22,7 +22,7 @@ vLLM cheap enough for production (<10% of request latency)?
 | **Gate: swap < 10% of latency** | **PASSED** |
 
 - Swap overhead is negligible — consistent with the ~50 ms HF-backend materialization
-  measured at CPU scale. Task LoRA hot-swap is operationally free.
+  measured in the CPU-scale pilots. Task LoRA hot-swap is operationally free.
 - Caveat worth knowing: vLLM's LoRA execution path (punica kernels) adds a steady ~23%
   latency vs the bare base regardless of swapping. That is a serving-stack constant, not a
   PorTAL cost, and shrinks with batching; it should be priced into the internal tier's

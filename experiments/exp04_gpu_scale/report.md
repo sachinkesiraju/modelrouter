@@ -9,7 +9,7 @@ with properly-trained refits and a real model ladder?
   artifacts checkpointed to a Modal volume. Policy sweep runs locally on the bundle.
 - Ladder: **cheap** = Qwen3-0.6B (refit, cost 1.0) / **mid** = Qwen3-1.7B (source artifact,
   cost 2.83) / **capable** = Qwen3-4B (refit, cost 6.67); costs ∝ parameter count.
-- Refits from `RampPublic/portal-qwen3-1.7b` with 300 train/task (vs 20 on CPU), 3 epochs,
+- Refits from `RampPublic/portal-qwen3-1.7b` with 300 train/task (vs 20 in earlier CPU-scale pilots), 3 epochs,
   bf16, batch 8. Oracle: 14 tasks × up to 100 val + 100 test rows = **1230 val / 1230 test**.
 
 ## Refit results (macro val accuracy, epoch 0 = pre-refit baseline)
@@ -34,7 +34,7 @@ the alignment transfers *up* the ladder as well as down.
 | **score-floor val-tuned (1.2)** | **68.0%** | **58.4%** | −2.8 pp | 23% |
 
 - **Kill test (≥15% savings at ≤3 pp drop): PASSED decisively** — 58.4% savings at −2.8 pp
-  (bootstrap CI: 56.9–59.6% savings). At CPU scale the same gate passed with 19%.
+  (bootstrap CI: 56.9–59.6% savings). In earlier CPU-scale pilot runs the same criterion passed with 19%.
 - Routing headroom *grew* with scale: the oracle beats always-capable by +12.3 pp while
   saving 59% — the tiers make complementary errors.
 - **Task-latent `z` router: 100% leave-one-task-out** at predicting the best tier per task.
@@ -49,8 +49,8 @@ the alignment transfers *up* the ladder as well as down.
 
 The headline production result: with a properly-trained 1.7B tier, the **prompt-only
 router — the signal usable live, before any forward pass — now saves 47% within ~1 pp of
-always-4B** (on CPU-scale bases it managed only 2–5%). Gap 1 (live routing signal) closes
-at scale; the fragile 0.6B tier was the CPU-scale artifact, exactly as the roadmap
+always-4B** (in the CPU-scale pilots it managed only 2–5%). Gap 1 (live routing signal) closes
+at scale; the fragile 0.6B tier was a CPU-scale artifact, exactly as the roadmap
 hypothesized.
 
 ## Cost

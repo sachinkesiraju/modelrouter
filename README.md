@@ -29,13 +29,33 @@ Measured on 14 tasks / 1,230 held-out rows (local ladder: GPU-trained refits on 
 | **Commercial ladder (gpt-5.4-nano/mini → gpt-5.6, real $)** | **40.7% spend cut at −3.6 pp** (CI: 38.4–43.0%) |
 | Commercial oracle headroom | +6.0 pp accuracy *above* always-gpt-5.6 at 86% savings |
 
-## Components
+## Architecture
 
-- **Routers** (`routing`): score-distribution, prompt-embedding (live path), and task-latent `z` routers, plus a task classifier.
-- **Policies** (`dispatch`): floor (cheapest model within a quality floor) and cascade (run cheap, escalate on low confidence).
-- **Runtime** (`runtime`): HF backend that hot-swaps PorTAL task LoRAs with an adapter cache.
-- **Gateway** (`serve`): production OpenAI-compatible gateway: per-route YAML policies, LiteLLM commercial tier with real $/token costs, shadow mode, fallback chains, API keys, abstain-to-capable, JSONL decision traces, and router retraining from traces (`learning`). Validated live against Together AI.
-- **Eval** (`eval`): policy stats, bootstrap CIs, Pareto plots, and a machine-checkable quality/cost acceptance gate.
+```
+client (OpenAI SDK)
+   │
+   ▼
+Gateway (/v1/chat/completions)        modelrouter.gateway
+   │  task = caller-supplied or TaskClassifier(prompt)
+   ▼
+Router                                 modelrouter.routing
+   │  p_correct per registered model (prompt embeddings on the hot path)
+   ▼
+DispatchPolicy                         modelrouter.dispatch
+   │  cheapest model with p * floor >= max p   (or cascade + escalation)
+   ▼
+Backend                                modelrouter.runtime
+   │  PortalModel.generate(task) → PortalInjector.activate → forward
+   ▼
+TraceJournal                           modelrouter.tracing
+      JSONL: prompt, task, candidates, chosen, reason, scores
+```
+
+- **Routers** (`routing`) are trained offline against per-(query, model) correctness labels from scoring every registered model on the task suite. Three signals: `ScoreRouter` (candidate score-distribution features; most accurate, needs the candidate forward pass), `PromptEmbeddingRouter` (MiniLM prompt embeddings; prompt-only production hot path), and `LatentRouter` (predicts per-task suitability from the PorTAL task latent `z` for unseen tasks).
+- **Policies** (`dispatch`) are config, not code: `FloorPolicy(floor)` picks the cheapest model within a quality floor (one knob tuned on validation); `CascadePolicy(threshold)` runs the cheap model and escalates on low confidence, with double-inference cost accounted.
+- **Backends** (`runtime`, `backends`) hide the serving substrate behind one seam: an HF reference backend that hot-swaps PorTAL task LoRAs with an adapter cache, and a LiteLLM commercial tier with real $/token costs.
+- **Gateway** (`serve`): OpenAI-compatible server with per-route YAML policies, shadow mode, fallback chains, API keys, abstain-to-capable, JSONL decision traces, and router retraining from traces (`learning`). Validated live against Together AI.
+- **Eval** (`eval`): policy stats, bootstrap CIs, Pareto plots, and a machine-checkable quality/cost acceptance gate (≥15% savings at ≤3 pp drop by default).
 
 ## Quickstart
 
@@ -50,7 +70,7 @@ modelrouter serve --config configs/routes.example.yaml
 python experiments/exp04_gpu_scale/run_sweep.py
 ```
 
-Full reproduction (CPU experiments from scratch, Modal GPU runs) is documented in each experiment's report under [`experiments/`](experiments/). See [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md) for design and the productization plan.
+Full reproduction (Modal GPU runs, OpenAI scoring) is documented in each experiment's report under [`experiments/`](experiments/). See the [roadmap](docs/roadmap.md) for the productization plan.
 
 ## Limitations
 
