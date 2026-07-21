@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="330" viewBox="0 0 880 330" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="330" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+
+  <!-- Prompt -->
+  <rect x="24" y="130" width="130" height="56" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="89" y="154" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">Prompt</text>
+  <text x="89" y="172" text-anchor="middle" font-size="11" fill="#64748b">OpenAI-compatible API</text>
+
+  <line x1="154" y1="158" x2="196" y2="158" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Router -->
+  <rect x="198" y="112" width="176" height="92" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="286" y="136" text-anchor="middle" font-size="14" font-weight="600" fill="#312e81">Router</text>
+  <text x="286" y="156" text-anchor="middle" font-size="11" fill="#4338ca">"Which model is capable?"</text>
+  <text x="286" y="174" text-anchor="middle" font-size="11" fill="#4338ca">prompt embedding · scores</text>
+  <text x="286" y="190" text-anchor="middle" font-size="11" fill="#4338ca">task latent z</text>
+
+  <line x1="374" y1="158" x2="416" y2="158" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Policy -->
+  <rect x="418" y="112" width="170" height="92" rx="10" fill="#fff7ed" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="503" y="136" text-anchor="middle" font-size="14" font-weight="600" fill="#7c2d12">Policy</text>
+  <text x="503" y="156" text-anchor="middle" font-size="11" fill="#9a3412">cheapest model that</text>
+  <text x="503" y="172" text-anchor="middle" font-size="11" fill="#9a3412">clears the quality bar</text>
+  <text x="503" y="190" text-anchor="middle" font-size="11" fill="#9a3412">floor · cascade · fallback</text>
+
+  <!-- Model ladder -->
+  <line x1="588" y1="140" x2="646" y2="72" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="588" y1="158" x2="646" y2="158" stroke="#059669" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <line x1="588" y1="176" x2="646" y2="244" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="648" y="44" width="204" height="52" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="750" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Small model  ·  $</text>
+  <text x="750" y="84" text-anchor="middle" font-size="11" fill="#64748b">e.g. Qwen3-0.6B / 1.7B</text>
+
+  <rect x="648" y="132" width="204" height="52" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+  <text x="750" y="154" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">Mid model  ·  $$   ✓ chosen</text>
+  <text x="750" y="172" text-anchor="middle" font-size="11" fill="#047857">good enough here — 47–58% saved</text>
+
+  <rect x="648" y="220" width="204" height="52" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="750" y="242" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Big / API model  ·  $$$</text>
+  <text x="750" y="260" text-anchor="middle" font-size="11" fill="#64748b">escalation &amp; fallback tier</text>
+
+  <!-- PorTAL adapter box -->
+  <rect x="198" y="238" width="390" height="62" rx="10" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="393" y="262" text-anchor="middle" font-size="13" font-weight="600" fill="#581c87">PorTAL: one artifact → any task × any model size</text>
+  <text x="393" y="282" text-anchor="middle" font-size="11" fill="#7e22ce">skill LoRA generated on the fly (~15 ms swap on vLLM)</text>
+  <line x1="588" y1="269" x2="646" y2="200" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+
+  <!-- Trace loop -->
+  <path d="M 750 96 C 750 110, 750 118, 750 130" fill="none"/>
+  <path d="M 503 204 C 503 224, 460 226, 420 232" fill="none"/>
+  <path d="M 286 204 C 286 220, 286 226, 286 236" fill="none"/>
+  <path d="M 89 186 C 89 300, 240 316, 393 312" fill="none"/>
+  <path d="M 852 158 C 872 158, 872 20, 503 20 C 340 20, 300 20, 286 108" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <text x="560" y="14" text-anchor="middle" font-size="11" fill="#64748b">every decision traced → routers retrained from real outcomes</text>
+</svg>

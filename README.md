@@ -2,6 +2,8 @@
 
 *Route each query to the cheapest base model that can do the job — materializing the task adapter at runtime from a shared PorTAL latent.*
 
+![How portal-dispatch works](docs/assets/how-it-works.svg)
+
 `portal-dispatch` is a research prototype of a cost-aware inference router. Instead of picking among fixed API models, it (1) predicts which registered base model can answer a query correctly, (2) picks the cheapest one that clears a quality bar, and (3) materializes the task-specific LoRA adapter for that base on demand (~50 ms) from a shared [PorTAL](https://pypi.org/project/portallib/) hypernetwork latent.
 
 ## How it works
@@ -102,6 +104,17 @@ The decisive P0 experiment (`experiments/exp04_gpu_scale/`): Qwen3-0.6B/1.7B/4B 
 | vLLM adapter hot-swap (exp05, A10G) | **15.4 ms = 2.2% of request — gate PASSED** |
 
 Dispatch works when the task is known, and at GPU scale the live prompt-only signal works too — the fragile 0.6B cheap tier was a CPU-scale artifact. Both P0 gates (routing headroom, vLLM swap overhead) have now passed; see `experiments/exp04_gpu_scale/` and `experiments/exp05_vllm_bench/`.
+
+## Limitations
+
+This is a validated research artifact plus a working single-node router — not a production service. Know what the numbers do and don't cover:
+
+- **Benchmark scope.** All quality/savings numbers come from 14 multiple-choice tasks (up to 1,230 held-out rows at GPU scale) with programmatic graders. Free-form generation quality is not measured; your workload needs its own oracle benchmark (the eval harness builds one from prompts + graders).
+- **Model scope.** The GPU ladder tops out at Qwen3-4B. Whether the same headroom holds against frontier-class models is untested; commercial routing was validated live on one provider pair (Together AI), not a broad approved-model catalog.
+- **Cost model.** Local-tier savings use parameter-count-proportional costs; real $/token applies only to the LiteLLM commercial tier. GPU amortization for self-hosted serving is not modeled.
+- **Serving.** The vLLM benchmark measures single-request adapter-swap latency on one A10G. vLLM's LoRA path adds a steady ~23% latency vs the bare base (a serving-stack constant that shrinks with batching). No streaming, batching/coalescing, semantic cache, or load testing.
+- **Operations.** No multi-tenant control plane, quotas/spend limits, provider health checks, distributed queues, ClickHouse/OTel pipeline, or K8s packaging — that's the P2–P4 roadmap (`docs/roadmap.md`).
+- **Task-agnostic mode.** The live pipeline assumes the route (or classifier) supplies the task; auto-classification is guarded by abstain-to-capable but only lightly validated (81% classifier accuracy on a 4-task slice).
 
 ## License
 
