@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "portal-dispatch"
+version = "0.1.0"
+description = "Route each query to the cheapest base model that can do the job, materializing the task adapter at runtime from a shared PorTAL latent."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = [
+    "portallib>=0.1.2",
+    "torch>=2.2",
+    "transformers>=4.44",
+    "sentence-transformers>=3.0",
+    "scikit-learn>=1.4",
+    "joblib>=1.3",
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+    "pydantic>=2.6",
+]
+
+[project.optional-dependencies]
+serve = ["fastapi>=0.110", "uvicorn>=0.29"]
+plots = ["matplotlib>=3.8"]
+dev = ["pytest>=8.0", "ruff>=0.4", "mypy>=1.10", "httpx>=0.27"]
+
+[project.scripts]
+portal-dispatch = "portal_dispatch.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/portal_dispatch"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
