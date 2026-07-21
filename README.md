@@ -14,9 +14,9 @@ Inspired by [Ramp Router](https://ramp.com/router) and Ramp's work on [cost-effi
 
 > **Learned routing cut inference cost by 58% while giving up only 2.8 accuracy points versus always running the largest model in the ladder (Qwen3-4B). A prompt-only router, which decides before any model runs, still cut cost by 47% at a 1.1 point drop.**
 
-The same router applied to a commercial frontier ladder (gpt-5.4-nano / gpt-5.4-mini / gpt-5.6, real per-request API costs) cut spend by 40.7% at a 3.6 point drop versus always calling gpt-5.6 (`experiments/exp06_commercial_api/`).
+The same router applied to a commercial frontier ladder (gpt-5.4-nano / gpt-5.4-mini / gpt-5.6, real per-request API costs) cut spend by 40.7% at a 3.6 point drop versus always calling gpt-5.6 ([exp06](experiments/exp06_commercial_api/report.md)).
 
-Measured on 14 tasks / 1,230 held-out rows (local ladder: GPU-trained refits on Modal A100/A10G; `experiments/exp04_gpu_scale/`, `exp05_vllm_bench/`):
+Measured on 14 tasks / 1,230 held-out rows (local ladder: GPU-trained refits on Modal A100/A10G; [exp04](experiments/exp04_gpu_scale/report.md), [exp05](experiments/exp05_vllm_bench/report.md)):
 
 | Result | Value |
 |---|---|
@@ -28,8 +28,6 @@ Measured on 14 tasks / 1,230 held-out rows (local ladder: GPU-trained refits on 
 | vLLM task-adapter hot-swap overhead | 15.4 ms = 2.2% of a request |
 | **Commercial ladder (gpt-5.4-nano/mini → gpt-5.6, real $)** | **40.7% spend cut at −3.6 pp** (CI: 38.4–43.0%) |
 | Commercial oracle headroom | +6.0 pp accuracy *above* always-gpt-5.6 at 86% savings |
-
-CPU-scale results (reproducible on an 8 GB laptop) are in `experiments/exp01–03/*/report.md`; every number in this README traces to a JSON result file and report committed under `experiments/`.
 
 ## Components
 
@@ -52,7 +50,7 @@ modelrouter serve --config configs/routes.example.yaml
 python experiments/exp04_gpu_scale/run_sweep.py
 ```
 
-Full reproduction (CPU experiments from scratch, Modal GPU runs) is documented in each `experiments/*/report.md`. See `docs/architecture.md` and `docs/roadmap.md` for design and the productization plan.
+Full reproduction (CPU experiments from scratch, Modal GPU runs) is documented in each experiment's report under [`experiments/`](experiments/). See [architecture](docs/architecture.md) and [roadmap](docs/roadmap.md) for design and the productization plan.
 
 ## Limitations
 
@@ -62,7 +60,7 @@ A validated research artifact plus a working single-node router, not a productio
 - **Model scope**: local GPU ladder tops out at Qwen3-4B; commercial routing validated on one provider (OpenAI, gpt-5.4-nano/mini/gpt-5.6) plus a live Together AI gateway test.
 - **Cost model**: local-tier savings use parameter-proportional costs; GPU amortization not modeled.
 - **Serving**: single-request benchmarks only; vLLM's LoRA path adds a steady ~23% latency vs the bare base (shrinks with batching). No streaming, batching, or load testing.
-- **Operations**: no multi-tenant control plane, quotas, health checks, or K8s packaging (see `docs/roadmap.md`).
+- **Operations**: no multi-tenant control plane, quotas, health checks, or K8s packaging (see the [roadmap](docs/roadmap.md)).
 - **Task-agnostic mode**: lightly validated; guarded by abstain-to-capable.
 
 ## License
