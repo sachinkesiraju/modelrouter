@@ -2,26 +2,13 @@
 
 *Route each query to the cheapest base model that can do the job — materializing the task adapter at runtime from a shared PorTAL latent.*
 
+Inspired by [Ramp Router](https://ramp.com/router) and Ramp's work on [cost-efficient LLM routing](https://builders.ramp.com/post/thompson-sampling-model-routing).
+
 ![How portal-dispatch works](docs/assets/how-it-works.svg)
 
 `portal-dispatch` is a research prototype of a cost-aware inference router. Instead of picking among fixed API models, it (1) predicts which registered base model can answer a query correctly, (2) picks the cheapest one that clears a quality bar, and (3) materializes the task-specific LoRA adapter for that base on demand (~50 ms) from a shared [PorTAL](https://pypi.org/project/portallib/) hypernetwork latent.
 
 ## How it works
-
-```
-prompt ──► TaskClassifier ──► Router (score / prompt-embedding / task-latent z)
-                                   │
-                                   ▼
-                         DispatchPolicy (floor / cascade)
-                                   │
-                       cheapest capable base chosen
-                                   │
-                                   ▼
-              PortalModel.generate(task) ──► PortalInjector.activate
-                                   │
-                                   ▼
-                            base forward pass
-```
 
 - **Routers** (`portal_dispatch.routing`): `ScoreRouter` (per-base score-distribution features; offline/oracle-grade), `PromptEmbeddingRouter` (MiniLM prompt embeddings; production path — no candidate forward pass), `LatentRouter` (predicts per-task base suitability from the PorTAL task latent `z`; zero-shot task routing), `TaskClassifier`.
 - **Policies** (`portal_dispatch.dispatch`): `FloorPolicy` (pre-route: cheapest base with `p * floor >= max p`), `CascadePolicy` (run cheap, escalate on low confidence).
