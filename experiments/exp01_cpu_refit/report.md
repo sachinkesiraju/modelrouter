@@ -26,3 +26,9 @@ The refit must beat the pre-refit baseline / random by ≥10 pp macro accuracy:
 Epoch 3 regresses (small-data overfitting at 20 examples/task); the saved artifact is the
 best epoch. This matches the Phase 1 observation that CPU-scale refits are a lower bound —
 the GPU plan uses 300 examples/task.
+
+## Reproduce
+
+```bash
+python experiments/exp01_cpu_refit/run.py
+```

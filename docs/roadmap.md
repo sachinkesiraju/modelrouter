@@ -1,6 +1,6 @@
 # modelrouter → Production Inference Router: Productization & Engineering Roadmap
 
-*Prepared 2026-07-21. Based on `modelrouter_plan.md`, `experiments/exp01_cpu_smoke/report.md`, and `experiments/exp02_cpu_policy_sweep/report.md`.*
+*Prepared 2026-07-21, grounded in the CPU-scale experiment reports under `experiments/`.*
 
 ---
 

@@ -33,3 +33,12 @@ vLLM cheap enough for production (<10% of request latency)?
 ## Cost
 
 Two A10G runs ≈ 0.4 GPU-hours ≈ **$1.30**.
+
+## Reproduce
+
+```bash
+modal run experiments/exp05_vllm_bench/modal_app.py::bench
+# results land in /vol/results/vllm_bench.json on the "modelrouter" Modal volume:
+modal volume get modelrouter results/vllm_bench.json \
+  experiments/exp05_vllm_bench/results/vllm_bench.json
+```

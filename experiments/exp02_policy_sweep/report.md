@@ -48,3 +48,11 @@
 2. Score-router floor dispatch clears the pre-registered Go/No-Go bar at CPU scale.
 3. The remaining gaps (prompt-router aggressiveness, cascade economics, task-agnostic
    robustness — see exp03) are the exact GPU-scale questions in `docs/roadmap.md`.
+
+## Reproduce
+
+```bash
+python experiments/exp02_policy_sweep/build_bundle.py \
+  --cheap-artifact experiments/exp01_cpu_refit/artifacts/refit-qwen3-0.6b
+python experiments/exp02_policy_sweep/run.py
+```

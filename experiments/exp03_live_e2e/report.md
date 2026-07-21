@@ -32,3 +32,10 @@ Task classifier accuracy on test prompts: **81.2%**.
    larger collapse on the full 14-task suite at 75% classifier accuracy.
 3. Product implication (unchanged): ship **known-skill routes** first; in task-agnostic
    mode, abstain-to-capable on low classifier confidence so mistakes cost money, not quality.
+
+## Reproduce
+
+```bash
+python experiments/exp03_live_e2e/run.py \
+  --cheap-artifact experiments/exp01_cpu_refit/artifacts/refit-qwen3-0.6b
+```

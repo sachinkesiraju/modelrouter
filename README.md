@@ -1,35 +1,39 @@
 # modelrouter
 
-*Route each query to the cheapest model that can do the job — materializing the task adapter at runtime from a shared PorTAL latent.*
+[![CI](https://github.com/sachinkesiraju/modelrouter/actions/workflows/ci.yml/badge.svg)](https://github.com/sachinkesiraju/modelrouter/actions/workflows/ci.yml)
+
+*Route each query to the cheapest model that can do the job. Load the task-specific LoRA adapter for that model at request time, generated from a single PorTAL artifact.*
+
+Most requests don't need the largest model. A router trained on per-model correctness can send each request to the cheapest model that will get it right, and apply the task-specific LoRA adapter at runtime.
 
 Inspired by [Ramp Router](https://ramp.com/router) and Ramp's work on [cost-efficient LLM routing](https://builders.ramp.com/post/thompson-sampling-model-routing).
 
 ![How modelrouter works](docs/assets/how-it-works.svg)
 
-A cost-aware inference router: predict which model can answer a query, pick the cheapest one that clears a quality bar, and generate the task-specific LoRA for that model on demand from a single [PorTAL](https://pypi.org/project/portallib/) artifact (~15 ms swap on vLLM).
+## Headline result
 
-## Results
+> **Learned routing cut inference cost by 58% while giving up only 2.8 accuracy points versus always running the largest model in the ladder (Qwen3-4B). A prompt-only router, which decides before any model runs, still cut cost by 47% at a 1.1 point drop.**
 
-GPU-scale validation (Modal A100/A10G; Qwen3-0.6B/1.7B/4B ladder, 14 tasks, 1,230 held-out rows — `experiments/exp04_gpu_scale/`, `exp05_vllm_bench/`):
+All comparisons are against the largest model in the self-hosted Qwen3 0.6B / 1.7B / 4B ladder; no commercial frontier API was benchmarked (see Limitations). Measured on 14 tasks / 1,230 held-out rows with GPU-trained refits (Modal A100/A10G; `experiments/exp04_gpu_scale/`, `exp05_vllm_bench/`):
 
 | Result | Value |
 |---|---|
-| **Kill test: ≥15% savings at ≤3 pp drop** | **PASSED — 58.4% savings at −2.8 pp** (CI: 56.9–59.6%) |
-| Zero-drop operating point | 44.7% savings at −0.2 pp |
-| **Prompt-only router (live-deployable)** | **47.0% savings at −1.1 pp** (1.7B vs 4B) |
-| Oracle headroom (3-tier) | +12.3 pp accuracy over always-capable at 59.2% savings |
-| Task-latent `z` tier prediction | 100% leave-one-task-out |
-| vLLM adapter hot-swap | **15.4 ms = 2.2% of request — gate PASSED** |
+| **Cheapest-capable routing (3-tier ladder)** | **58.4% cost savings at −2.8 pp accuracy** (CI: 56.9–59.6%) |
+| Near-zero-loss operating point | 44.7% savings at −0.2 pp |
+| **Prompt-only router (usable live, pre-inference)** | **47.0% savings at −1.1 pp** (1.7B vs 4B) |
+| Routing headroom (oracle, 3-tier) | +12.3 pp accuracy *above* always-largest at 59.2% savings |
+| Task-latent `z` tier prediction for unseen tasks | 100% leave-one-task-out |
+| vLLM task-adapter hot-swap overhead | 15.4 ms = 2.2% of a request |
 
-CPU-scale numbers (reproducible on an 8 GB laptop) are in `experiments/exp01–03/*/report.md`.
+CPU-scale results (reproducible on an 8 GB laptop) are in `experiments/exp01–03/*/report.md`; every number in this README traces to a JSON result file and report committed under `experiments/`.
 
 ## Components
 
-- **Routers** (`routing`) — score-distribution, prompt-embedding (live path), and task-latent `z` routers, plus a task classifier.
-- **Policies** (`dispatch`) — floor (cheapest model within a quality floor) and cascade (run cheap, escalate on low confidence).
-- **Runtime** (`runtime`) — HF backend that hot-swaps PorTAL task LoRAs with an adapter cache.
-- **Gateway** (`serve`) — production OpenAI-compatible gateway: per-route YAML policies, LiteLLM commercial tier with real $/token costs, shadow mode, fallback chains, API keys, abstain-to-capable, JSONL decision traces, and router retraining from traces (`learning`). Validated live against Together AI.
-- **Eval** (`eval`) — policy stats, bootstrap CIs, Pareto plots, machine-checkable kill criteria.
+- **Routers** (`routing`): score-distribution, prompt-embedding (live path), and task-latent `z` routers, plus a task classifier.
+- **Policies** (`dispatch`): floor (cheapest model within a quality floor) and cascade (run cheap, escalate on low confidence).
+- **Runtime** (`runtime`): HF backend that hot-swaps PorTAL task LoRAs with an adapter cache.
+- **Gateway** (`serve`): production OpenAI-compatible gateway: per-route YAML policies, LiteLLM commercial tier with real $/token costs, shadow mode, fallback chains, API keys, abstain-to-capable, JSONL decision traces, and router retraining from traces (`learning`). Validated live against Together AI.
+- **Eval** (`eval`): policy stats, bootstrap CIs, Pareto plots, and a machine-checkable quality/cost acceptance gate.
 
 ## Quickstart
 
@@ -40,25 +44,22 @@ pip install -e ".[serve,plots,dev]"
 # serve the gateway
 modelrouter serve --config configs/routes.example.yaml
 
-# reproduce the CPU validation (all public artifacts)
-python experiments/exp01_cpu_refit/run.py
-python experiments/exp02_policy_sweep/build_bundle.py \
-  --cheap-artifact experiments/exp01_cpu_refit/artifacts/refit-qwen3-0.6b
-python experiments/exp02_policy_sweep/run.py
+# reproduce the headline table from the committed GPU score bundles (no GPU needed)
+python experiments/exp04_gpu_scale/run_sweep.py
 ```
 
-See `docs/architecture.md` and `docs/roadmap.md` for design and the productization plan.
+Full reproduction (CPU experiments from scratch, Modal GPU runs) is documented in each `experiments/*/report.md`. See `docs/architecture.md` and `docs/roadmap.md` for design and the productization plan.
 
 ## Limitations
 
-A validated research artifact plus a working single-node router — not a production service:
+A validated research artifact plus a working single-node router, not a production service:
 
-- **Benchmark scope** — 14 multiple-choice tasks with programmatic graders; free-form generation quality is not measured.
-- **Model scope** — GPU ladder tops out at Qwen3-4B; commercial routing validated on one provider pair (Together AI).
-- **Cost model** — local-tier savings use parameter-proportional costs; GPU amortization not modeled.
-- **Serving** — single-request benchmarks only; vLLM's LoRA path adds a steady ~23% latency vs the bare base (shrinks with batching). No streaming, batching, or load testing.
-- **Operations** — no multi-tenant control plane, quotas, health checks, or K8s packaging (see `docs/roadmap.md`).
-- **Task-agnostic mode** — lightly validated; guarded by abstain-to-capable.
+- **Benchmark scope**: 14 multiple-choice tasks with programmatic graders; free-form generation quality is not measured.
+- **Model scope**: GPU ladder tops out at Qwen3-4B; commercial routing validated on one provider pair (Together AI).
+- **Cost model**: local-tier savings use parameter-proportional costs; GPU amortization not modeled.
+- **Serving**: single-request benchmarks only; vLLM's LoRA path adds a steady ~23% latency vs the bare base (shrinks with batching). No streaming, batching, or load testing.
+- **Operations**: no multi-tenant control plane, quotas, health checks, or K8s packaging (see `docs/roadmap.md`).
+- **Task-agnostic mode**: lightly validated; guarded by abstain-to-capable.
 
 ## License
 
