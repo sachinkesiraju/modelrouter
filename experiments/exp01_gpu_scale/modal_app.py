@@ -1,11 +1,11 @@
-"""exp04: GPU-scale validation on Modal.
+"""exp01: GPU-scale validation on Modal.
 
 Stages (each a separate billed job; artifacts checkpointed to a Modal volume):
 
-  modal run experiments/exp04_gpu_scale/modal_app.py::smoke
-  modal run experiments/exp04_gpu_scale/modal_app.py::refit --target Qwen/Qwen3-0.6B --tag refit-0.6b
-  modal run experiments/exp04_gpu_scale/modal_app.py::refit --target Qwen/Qwen3-4B --tag refit-4b
-  modal run experiments/exp04_gpu_scale/modal_app.py::score --spec-json '...'
+  modal run experiments/exp01_gpu_scale/modal_app.py::smoke
+  modal run experiments/exp01_gpu_scale/modal_app.py::refit --target Qwen/Qwen3-0.6B --tag refit-0.6b
+  modal run experiments/exp01_gpu_scale/modal_app.py::refit --target Qwen/Qwen3-4B --tag refit-4b
+  modal run experiments/exp01_gpu_scale/modal_app.py::score --spec-json '...'
   modal volume get modelrouter results/<name> ...
 """
 

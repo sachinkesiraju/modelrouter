@@ -1,4 +1,4 @@
-# exp06: Routing across commercial frontier APIs (OpenAI)
+# exp03: Routing across commercial frontier APIs (OpenAI)
 
 Does cheapest-capable routing hold when the ladder is made of real commercial API
 models with real per-request dollar costs, topped by a frontier model?
@@ -8,7 +8,7 @@ models with real per-request dollar costs, topped by a frontier model?
 - **Ladder**: gpt-5.4-nano ($0.20/$1.25 per M tokens) → gpt-5.4-mini ($0.75/$4.50)
   → gpt-5.6 (`gpt-5.6-sol`, $5/$30), all via the OpenAI API with
   `reasoning_effort="none"`.
-- **Data**: the same seed-0 splits as exp04 — 14 tasks, 1,230 val + 1,230 test rows,
+- **Data**: the same seed-0 splits as exp01 — 14 tasks, 1,230 val + 1,230 test rows,
   multiple-choice with letter-answer prompting.
 - **Costs**: measured average API cost per request from token usage (not synthetic
   ratios): nano $2.3e-5, mini $8.6e-5, gpt-5.6 $5.66e-4 per request.
@@ -43,7 +43,7 @@ models with real per-request dollar costs, topped by a frontier model?
 
 ## Limitations
 
-- Same 14 multiple-choice tasks as exp04; free-form generation is not measured.
+- Same 14 multiple-choice tasks as exp01; free-form generation is not measured.
 - One provider (OpenAI); letter-answer prompting with no reasoning effort.
 - Savings depend on the price gap between tiers (25x nano-to-frontier here).
 
@@ -51,6 +51,6 @@ models with real per-request dollar costs, topped by a frontier model?
 
 ```bash
 export OPENAI_API_KEY=...   # ~$1.70 of API spend
-python experiments/exp06_commercial_api/score_openai.py
-python experiments/exp06_commercial_api/run.py   # analysis only, reruns free from committed scores
+python experiments/exp03_commercial_api/score_openai.py
+python experiments/exp03_commercial_api/run.py   # analysis only, reruns free from committed scores
 ```

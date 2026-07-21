@@ -6,5 +6,5 @@ experiments/*/artifacts/
 .venv/
 dist/
 *.log
-experiments/exp04_gpu_scale/results/scores_bundle_pair.joblib
+experiments/exp01_gpu_scale/results/scores_bundle_pair.joblib
 experiments/*/results/traces.jsonl

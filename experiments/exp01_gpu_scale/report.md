@@ -1,4 +1,4 @@
-# exp04_gpu_scale: the decisive GPU experiment (Modal, A100-80GB)
+# exp01_gpu_scale: the decisive GPU experiment (Modal, A100-80GB)
 
 The P0 go/no-go run from `docs/roadmap.md`: does routing headroom survive at GPU scale
 with properly-trained refits and a real model ladder?
@@ -58,7 +58,7 @@ hypothesized.
 Smoke (A10G) + 2 refits + scoring (A100-80GB) ≈ 2.2 GPU-hours ≈ **$9** total.
 
 The serving-substrate benchmark (vLLM adapter hot-swap; everything above uses the HF
-backend) is in `experiments/exp05_vllm_bench/` — it also passed (15.4 ms swap = 2.2% of a
+backend) is in `experiments/exp02_vllm_bench/` — it also passed (15.4 ms swap = 2.2% of a
 request).
 
 ## Reproduce
@@ -66,28 +66,28 @@ request).
 The policy sweep runs locally on the committed score bundles — no GPU needed:
 
 ```bash
-python experiments/exp04_gpu_scale/run_sweep.py                 # 3-tier + pairwise tables
+python experiments/exp01_gpu_scale/run_sweep.py                 # 3-tier + pairwise tables
 ```
 
 To regenerate everything from scratch on Modal (needs `modal token set ...`; ~$9):
 
 ```bash
 # cheap 5-minute validity check before spending A100 time
-modal run experiments/exp04_gpu_scale/modal_app.py::smoke
+modal run experiments/exp01_gpu_scale/modal_app.py::smoke
 
 # refits (A100-80GB, ~40 min each)
-modal run experiments/exp04_gpu_scale/modal_app.py::refit \
+modal run experiments/exp01_gpu_scale/modal_app.py::refit \
   --target Qwen/Qwen3-0.6B --tag refit-0.6b-gpu
-modal run experiments/exp04_gpu_scale/modal_app.py::refit \
+modal run experiments/exp01_gpu_scale/modal_app.py::refit \
   --target Qwen/Qwen3-4B --tag refit-4b-gpu
 
 # oracle scoring of all three tiers (A100-80GB, ~1 h)
-modal run experiments/exp04_gpu_scale/modal_app.py::score --spec-json '{
+modal run experiments/exp01_gpu_scale/modal_app.py::score --spec-json '{
   "cheap":   ["Qwen/Qwen3-0.6B", "/vol/artifacts/refit-0.6b-gpu", 1.0],
   "mid":     ["Qwen/Qwen3-1.7B", "RampPublic/portal-qwen3-1.7b", 2.83],
   "capable": ["Qwen/Qwen3-4B",   "/vol/artifacts/refit-4b-gpu",  6.67]}'
 
 # then download /vol/results/scores_bundle_gpu.joblib into results/ and run run_sweep.py
 modal volume get modelrouter results/scores_bundle_gpu.joblib \
-  experiments/exp04_gpu_scale/results/scores_bundle_gpu.joblib
+  experiments/exp01_gpu_scale/results/scores_bundle_gpu.joblib
 ```

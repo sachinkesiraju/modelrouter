@@ -14,9 +14,9 @@ Inspired by [Ramp Router](https://ramp.com/router) and Ramp's work on [cost-effi
 
 > **Learned routing cut inference cost by 58% while giving up only 2.8 accuracy points versus always running the largest model in the ladder (Qwen3-4B). A prompt-only router, which decides before any model runs, still cut cost by 47% at a 1.1 point drop.**
 
-The same router applied to a commercial frontier ladder (gpt-5.4-nano / gpt-5.4-mini / gpt-5.6, real per-request API costs) cut spend by 40.7% at a 3.6 point drop versus always calling gpt-5.6 ([exp06](experiments/exp06_commercial_api/report.md)).
+The same router applied to a commercial frontier ladder (gpt-5.4-nano / gpt-5.4-mini / gpt-5.6, real per-request API costs) cut spend by 40.7% at a 3.6 point drop versus always calling gpt-5.6 ([exp03](experiments/exp03_commercial_api/report.md)).
 
-Measured on 14 tasks / 1,230 held-out rows (local ladder: GPU-trained refits on Modal A100/A10G; [exp04](experiments/exp04_gpu_scale/report.md), [exp05](experiments/exp05_vllm_bench/report.md)):
+Measured on 14 tasks / 1,230 held-out rows (local ladder: GPU-trained refits on Modal A100/A10G; [exp01](experiments/exp01_gpu_scale/report.md), [exp02](experiments/exp02_vllm_bench/report.md)):
 
 | Result | Value |
 |---|---|
@@ -51,11 +51,11 @@ TraceJournal                           modelrouter.tracing
       JSONL: prompt, task, candidates, chosen, reason, scores
 ```
 
-- **Routers** (`routing`) are trained offline against per-(query, model) correctness labels from scoring every registered model on the task suite. Three signals: `ScoreRouter` (candidate score-distribution features; most accurate, needs the candidate forward pass), `PromptEmbeddingRouter` (MiniLM prompt embeddings; prompt-only production hot path), and `LatentRouter` (predicts per-task suitability from the PorTAL task latent `z` for unseen tasks).
-- **Policies** (`dispatch`) are config, not code: `FloorPolicy(floor)` picks the cheapest model within a quality floor (one knob tuned on validation); `CascadePolicy(threshold)` runs the cheap model and escalates on low confidence, with double-inference cost accounted.
-- **Backends** (`runtime`, `backends`) hide the serving substrate behind one seam: an HF reference backend that hot-swaps PorTAL task LoRAs with an adapter cache, and a LiteLLM commercial tier with real $/token costs.
-- **Gateway** (`serve`): OpenAI-compatible server with per-route YAML policies, shadow mode, fallback chains, API keys, abstain-to-capable, JSONL decision traces, and router retraining from traces (`learning`). Validated live against Together AI.
-- **Eval** (`eval`): policy stats, bootstrap CIs, Pareto plots, and a machine-checkable quality/cost acceptance gate (≥15% savings at ≤3 pp drop by default).
+- **Routers** (`routing`): trained offline on per-(query, model) correctness. Prompt-embedding router on the hot path; score-distribution and task-latent `z` routers for oracle labels and unseen tasks.
+- **Policies** (`dispatch`): one knob — floor (cheapest model within a quality floor) or cascade (run cheap, escalate on low confidence).
+- **Backends** (`runtime`, `backends`): one seam hiding HF with PorTAL LoRA hot-swap and a LiteLLM commercial tier with real $/token costs.
+- **Gateway** (`serve`): OpenAI-compatible server — YAML route policies, shadow mode, fallbacks, API keys, JSONL traces, retraining from traces.
+- **Eval** (`eval`): policy stats, bootstrap CIs, and a machine-checkable quality/cost acceptance gate.
 
 ## Quickstart
 
@@ -67,7 +67,7 @@ pip install -e ".[serve,plots,dev]"
 modelrouter serve --config configs/routes.example.yaml
 
 # reproduce the headline table from the committed GPU score bundles (no GPU needed)
-python experiments/exp04_gpu_scale/run_sweep.py
+python experiments/exp01_gpu_scale/run_sweep.py
 ```
 
 Full reproduction (Modal GPU runs, OpenAI scoring) is documented in each experiment's report under [`experiments/`](experiments/). See the [roadmap](docs/roadmap.md) for the productization plan.

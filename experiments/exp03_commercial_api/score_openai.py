@@ -1,7 +1,7 @@
-"""Score the exp04 held-out suite on commercial OpenAI models with real $ costs.
+"""Score the exp01 held-out suite on commercial OpenAI models with real $ costs.
 
 Writes results/openai_scores.json: per-row correctness and measured API cost for
-each model on the same seed-0 val/test splits used in exp04.
+each model on the same seed-0 val/test splits used in exp01.
 """
 
 from __future__ import annotations

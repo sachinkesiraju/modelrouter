@@ -1,4 +1,4 @@
-"""exp04 step 2: policy sweep over the GPU score bundle (run locally)."""
+"""exp01 step 2: policy sweep over the GPU score bundle (run locally)."""
 
 from __future__ import annotations
 

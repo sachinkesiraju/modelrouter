@@ -1,11 +1,11 @@
-"""exp05: vLLM adapter-swap benchmark on Modal (the serving-substrate gate).
+"""exp02: vLLM adapter-swap benchmark on Modal (the serving-substrate gate).
 
 Exports PorTAL task LoRAs to standard PEFT directories, serves the base on vLLM
 with LoRA hot-swap, and measures per-task swap overhead vs the no-LoRA baseline.
 
 Gate (roadmap P0): median adapter-swap overhead < 10% of request latency.
 
-  modal run experiments/exp05_vllm_bench/modal_app.py::bench
+  modal run experiments/exp02_vllm_bench/modal_app.py::bench
 """
 
 from __future__ import annotations

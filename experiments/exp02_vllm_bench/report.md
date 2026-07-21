@@ -1,4 +1,4 @@
-# exp05_vllm_bench: vLLM adapter hot-swap benchmark (Modal, A10G)
+# exp02_vllm_bench: vLLM adapter hot-swap benchmark (Modal, A10G)
 
 The serving-substrate gate from `docs/roadmap.md` P0: is swapping PorTAL task LoRAs on
 vLLM cheap enough for production (<10% of request latency)?
@@ -37,8 +37,8 @@ Two A10G runs ≈ 0.4 GPU-hours ≈ **$1.30**.
 ## Reproduce
 
 ```bash
-modal run experiments/exp05_vllm_bench/modal_app.py::bench
+modal run experiments/exp02_vllm_bench/modal_app.py::bench
 # results land in /vol/results/vllm_bench.json on the "modelrouter" Modal volume:
 modal volume get modelrouter results/vllm_bench.json \
-  experiments/exp05_vllm_bench/results/vllm_bench.json
+  experiments/exp02_vllm_bench/results/vllm_bench.json
 ```
