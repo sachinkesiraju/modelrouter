@@ -4,6 +4,9 @@ Config format (routes.yaml):
 
 ```yaml
 api_keys: []                # empty = open gateway; else list of accepted bearer keys
+default_limits: {requests_per_minute: 120}   # optional; applies to keys without overrides
+key_limits:                 # optional per-key quotas / rate limits
+  some-key: {requests_per_minute: 60, requests_per_day: 10000}
 routes:
   default:
     shadow_mode: true       # log the routing decision but always serve default_model
@@ -58,10 +61,49 @@ class RouteConfig:
     fallback_order: list[str] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class KeyLimits:
+    requests_per_minute: int | None = None
+    requests_per_day: int | None = None
+
+
+class RateLimiter:
+    """Fixed-window per-key request counter for minute and day quotas."""
+
+    def __init__(self, limits: dict[str, KeyLimits], default: KeyLimits | None = None) -> None:
+        self.limits = limits
+        self.default = default
+        self._windows: dict[tuple[str, str], tuple[int, int]] = {}  # (key, period) -> (window_id, count)
+
+    def _limits_for(self, key: str) -> KeyLimits | None:
+        return self.limits.get(key, self.default)
+
+    def check(self, key: str, now: float | None = None) -> float | None:
+        """Record one request; return None if allowed, else seconds until retry."""
+        limits = self._limits_for(key)
+        if limits is None:
+            return None
+        now = time.time() if now is None else now
+        for period, seconds, cap in (("minute", 60, limits.requests_per_minute),
+                                     ("day", 86400, limits.requests_per_day)):
+            if cap is None:
+                continue
+            window = int(now // seconds)
+            prev_window, count = self._windows.get((key, period), (window, 0))
+            if prev_window != window:
+                count = 0
+            if count >= cap:
+                return (window + 1) * seconds - now
+            self._windows[(key, period)] = (window, count + 1)
+        return None
+
+
 @dataclass
 class GatewayConfig:
     routes: dict[str, RouteConfig]
     api_keys: list[str] = field(default_factory=list)
+    key_limits: dict[str, KeyLimits] = field(default_factory=dict)
+    default_limits: KeyLimits | None = None
 
     @staticmethod
     def from_yaml(path: str | Path) -> "GatewayConfig":
@@ -80,7 +122,10 @@ class GatewayConfig:
                 router_artifact=r.get("router_artifact"),
                 fallback_order=list(r.get("fallback_order") or [m.name for m in reversed(models)]),
             )
-        return GatewayConfig(routes=routes, api_keys=list(raw.get("api_keys") or []))
+        key_limits = {k: KeyLimits(**v) for k, v in (raw.get("key_limits") or {}).items()}
+        default_limits = KeyLimits(**raw["default_limits"]) if raw.get("default_limits") else None
+        return GatewayConfig(routes=routes, api_keys=list(raw.get("api_keys") or []),
+                             key_limits=key_limits, default_limits=default_limits)
 
 
 def build_backends(route: RouteConfig, overrides: dict[str, CompletionBackend] | None = None) -> dict[str, CompletionBackend]:
@@ -193,13 +238,35 @@ def create_production_app(
         )
 
     app = FastAPI(title="modelrouter gateway")
+    limiter = RateLimiter(config.key_limits, config.default_limits)
 
-    def check_key(authorization: str | None) -> None:
-        if not config.api_keys:
-            return
+    def check_key(authorization: str | None) -> str:
         token = (authorization or "").removeprefix("Bearer ").strip()
-        if token not in config.api_keys:
+        if config.api_keys and token not in config.api_keys:
             raise HTTPException(status_code=401, detail="invalid API key")
+        return token
+
+    def check_quota(key: str) -> None:
+        retry_after = limiter.check(key)
+        if retry_after is not None:
+            raise HTTPException(status_code=429, detail="rate limit exceeded",
+                                headers={"Retry-After": str(max(1, int(retry_after + 1)))})
+
+    @app.get("/healthz")
+    def healthz() -> dict[str, Any]:
+        return {"status": "ok"}
+
+    @app.get("/readyz")
+    def readyz() -> dict[str, Any]:
+        if not runtimes:
+            raise HTTPException(status_code=503, detail="no routes configured")
+        return {
+            "status": "ready",
+            "routes": {name: {"models": [b.name for b in rt.bases],
+                              "router_loaded": rt.router is not None,
+                              "shadow_mode": rt.config.shadow_mode}
+                       for name, rt in runtimes.items()},
+        }
 
     @app.get("/v1/models")
     def models(authorization: str | None = Header(default=None)) -> dict[str, Any]:
@@ -209,7 +276,8 @@ def create_production_app(
 
     @app.post("/v1/chat/completions")
     def chat(req: ChatRequest, authorization: str | None = Header(default=None)) -> dict[str, Any]:
-        check_key(authorization)
+        key = check_key(authorization)
+        check_quota(key)
         route_name = req.model.removeprefix("route/") if req.model.startswith("route/") else "default"
         if route_name not in runtimes:
             raise HTTPException(status_code=404, detail=f"unknown route {route_name!r}")
