@@ -1,0 +1,40 @@
+{
+  "model": "Qwen/Qwen3-1.7B",
+  "tasks": [
+    "truthfulqa",
+    "rte",
+    "cb",
+    "copa",
+    "wic",
+    "wsc",
+    "boolq",
+    "arc_easy"
+  ],
+  "base_median_ms": 573.2547089999827,
+  "lora_warm_median_ms": 703.6880890000106,
+  "lora_cold_median_ms": 719.0627545000154,
+  "warm_overhead_frac": 0.22753128400386477,
+  "cold_swap_ms": 15.37466550000488,
+  "cold_swap_frac_of_request": 0.021848693675991224,
+  "per_task_cold_ms": {
+    "truthfulqa": 715.9183100000064,
+    "rte": 716.3171750000004,
+    "cb": 719.8921049999853,
+    "copa": 74.36426099999949,
+    "wic": 737.3025639999753,
+    "wsc": 718.85153300002,
+    "boolq": 719.2739760000109,
+    "arc_easy": 719.9759260000178
+  },
+  "per_task_warm_ms": {
+    "truthfulqa": 701.4712600000053,
+    "rte": 702.1977310000125,
+    "cb": 703.1118980000031,
+    "copa": 48.7158660000091,
+    "wic": 704.2642800000181,
+    "wsc": 704.599648999988,
+    "boolq": 704.660792000027,
+    "arc_easy": 706.0280559999796
+  },
+  "gate_swap_lt_10pct": true
+}

@@ -99,8 +99,9 @@ The decisive P0 experiment (`experiments/exp04_gpu_scale/`): Qwen3-0.6B/1.7B/4B 
 | 3-tier oracle headroom | +12.3 pp accuracy at 59.2% savings |
 | **Prompt-only router (live-deployable), 1.7B vs 4B** | **47.0% savings at −1.1 pp** |
 | Task-latent `z` tier prediction | 100% leave-one-task-out |
+| vLLM adapter hot-swap (exp05, A10G) | **15.4 ms = 2.2% of request — gate PASSED** |
 
-Dispatch works when the task is known, and at GPU scale the live prompt-only signal works too — the fragile 0.6B cheap tier was a CPU-scale artifact. Remaining production gate: vLLM adapter-swap overhead (`docs/roadmap.md`).
+Dispatch works when the task is known, and at GPU scale the live prompt-only signal works too — the fragile 0.6B cheap tier was a CPU-scale artifact. Both P0 gates (routing headroom, vLLM swap overhead) have now passed; see `experiments/exp04_gpu_scale/` and `experiments/exp05_vllm_bench/`.
 
 ## License
 
