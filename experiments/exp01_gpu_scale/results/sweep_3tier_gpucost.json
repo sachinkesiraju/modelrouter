@@ -1,0 +1,142 @@
+{
+  "n_test": 1230,
+  "policies": [
+    {
+      "name": "always_cheap",
+      "accuracy": 0.5617886178861788,
+      "cost": 1.0,
+      "savings": 0.7306571454742239,
+      "drop_vs_capable": 0.14634146341463417,
+      "routed_cheap_frac": 1.0
+    },
+    {
+      "name": "always_capable",
+      "accuracy": 0.708130081300813,
+      "cost": 3.712740038196557,
+      "savings": 0.0,
+      "drop_vs_capable": 0.0,
+      "routed_cheap_frac": 0.0
+    },
+    {
+      "name": "oracle",
+      "accuracy": 0.7772357723577236,
+      "cost": 1.5844521220504777,
+      "savings": 0.5732391425875007,
+      "drop_vs_capable": -0.06910569105691056,
+      "routed_cheap_frac": 0.7845528455284553
+    },
+    {
+      "name": "score_floor_1.0",
+      "accuracy": 0.724390243902439,
+      "cost": 3.0029037718167304,
+      "savings": 0.19118932623266183,
+      "drop_vs_capable": -0.016260162601625994,
+      "routed_cheap_frac": 0.02032520325203252
+    },
+    {
+      "name": "score_floor_1.1",
+      "accuracy": 0.7056910569105691,
+      "cost": 2.2420350823627904,
+      "savings": 0.3961238709694723,
+      "drop_vs_capable": 0.0024390243902439046,
+      "routed_cheap_frac": 0.11951219512195121
+    },
+    {
+      "name": "score_floor_1.2",
+      "accuracy": 0.6804878048780488,
+      "cost": 1.8024620351727134,
+      "savings": 0.5145197302722414,
+      "drop_vs_capable": 0.027642276422764178,
+      "routed_cheap_frac": 0.23008130081300812
+    },
+    {
+      "name": "score_floor_1.5",
+      "accuracy": 0.6292682926829268,
+      "cost": 1.2107588852609896,
+      "savings": 0.6738907457013583,
+      "drop_vs_capable": 0.07886178861788617,
+      "routed_cheap_frac": 0.7495934959349594
+    },
+    {
+      "name": "score_floor_2.0",
+      "accuracy": 0.5715447154471545,
+      "cost": 1.0117730732664436,
+      "savings": 0.7274861523140987,
+      "drop_vs_capable": 0.13658536585365855,
+      "routed_cheap_frac": 0.9853658536585366
+    },
+    {
+      "name": "cascade_0.3",
+      "accuracy": 0.7008130081300813,
+      "cost": 4.14526432504131,
+      "savings": -0.11649732607049135,
+      "drop_vs_capable": 0.007317073170731714,
+      "routed_cheap_frac": 0.15284552845528454
+    },
+    {
+      "name": "cascade_0.5",
+      "accuracy": 0.7065040650406504,
+      "cost": 4.4772979869938485,
+      "savings": -0.2059282203794346,
+      "drop_vs_capable": 0.001626016260162566,
+      "routed_cheap_frac": 0.06341463414634146
+    },
+    {
+      "name": "prompt_delta_-0.1",
+      "accuracy": 0.708130081300813,
+      "cost": 3.699507159961452,
+      "savings": 0.003564181197435179,
+      "drop_vs_capable": 0.0,
+      "routed_cheap_frac": 0.004878048780487805
+    },
+    {
+      "name": "prompt_delta_-0.05",
+      "accuracy": 0.7056910569105691,
+      "cost": 3.6664249643736895,
+      "savings": 0.012474634191023237,
+      "drop_vs_capable": 0.0024390243902439046,
+      "routed_cheap_frac": 0.01707317073170732
+    },
+    {
+      "name": "prompt_delta_0.0",
+      "accuracy": 0.7008130081300813,
+      "cost": 3.556150979081146,
+      "savings": 0.04217614416965032,
+      "drop_vs_capable": 0.007317073170731714,
+      "routed_cheap_frac": 0.05772357723577236
+    },
+    {
+      "name": "prompt_delta_0.1",
+      "accuracy": 0.6609756097560976,
+      "cost": 2.909945425266844,
+      "savings": 0.2162269926444046,
+      "drop_vs_capable": 0.047154471544715415,
+      "routed_cheap_frac": 0.2959349593495935
+    },
+    {
+      "name": "score_floor_valtuned_1.2",
+      "accuracy": 0.6804878048780488,
+      "cost": 1.8024620351727134,
+      "savings": 0.5145197302722414,
+      "drop_vs_capable": 0.027642276422764178,
+      "routed_cheap_frac": 0.23008130081300812
+    }
+  ],
+  "val_tuned_floor": 1.2,
+  "val_tuned_ci": {
+    "accuracy": [
+      0.6536178861788619,
+      0.7048983739837398
+    ],
+    "savings": [
+      0.5016200621374743,
+      0.5246735316532174
+    ]
+  },
+  "kill_criteria": {
+    "savings_ok": true,
+    "quality_ok": true,
+    "passed": true
+  },
+  "latent_router_loo_accuracy": 1.0
+}

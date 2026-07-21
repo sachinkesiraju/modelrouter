@@ -53,6 +53,41 @@ always-4B** (in the CPU-scale pilots it managed only 2–5%). Gap 1 (live routin
 at scale; the fragile 0.6B tier was a CPU-scale artifact, exactly as the roadmap
 hypothesized.
 
+## GPU-amortized cost model (re-priced sweep)
+
+The tables above price tiers proportionally to parameter count (1.0 / 2.83 / 6.67). On a
+dedicated GPU the real per-request cost is GPU-time: measured saturated serving throughput
+per model on the same card, times the card's hourly price (`modelrouter.costs.GpuCostModel`).
+From exp02's `load_bench` (vLLM, A10G, peak concurrent output tok/s):
+
+| Tier | Measured tok/s (A10G) | GPU-amortized relative cost | Parameter-proportional |
+|---|---:|---:|---:|
+| 0.6B | 8707 | 1.00 | 1.00 |
+| 1.7B | 4825 | 1.80 | 2.83 |
+| 4B | 2345 | 3.71 | 6.67 |
+
+Throughput scales sub-linearly with parameters, so the 4B tier is relatively cheaper than
+parameter-proportional pricing assumes, and routing away from it saves less:
+
+| Result | Parameter-proportional | GPU-amortized |
+|---|---:|---:|
+| score-floor val-tuned (1.2), 3-tier | 58.4% savings at −2.8 pp | **51.5% savings at −2.8 pp** (CI: 50.2–52.5%) |
+| near-zero-loss floor 1.1, 3-tier | 44.7% at +0.2 pp | 39.6% at +0.2 pp |
+| prompt-only router δ=0.1 (pairwise) | 47.0% at −1.1 pp | 42.0% at −1.1 pp |
+| 3-tier oracle | 59.2% at +12.3 pp | 51.2% at +12.3 pp |
+| kill test (≥15% savings at ≤3 pp drop) | passed | **still passes** |
+
+Routing decisions are identical (the router does not see costs; only the savings
+accounting changes). Assumptions: saturated GPU (peak-concurrency throughput), requests
+priced by output tokens with prefill folded into measured end-to-end throughput, bare-base
+throughput (vLLM's LoRA overhead is a roughly uniform multiplier across tiers and cancels
+out of relative costs). Reproduce:
+
+```bash
+python experiments/exp01_gpu_scale/run_sweep.py \
+  --gpu-costs experiments/exp02_vllm_bench/results/load_bench.json
+```
+
 ## Cost
 
 Smoke (A10G) + 2 refits + scoring (A100-80GB) ≈ 2.2 GPU-hours ≈ **$9** total.

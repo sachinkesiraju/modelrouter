@@ -1,0 +1,137 @@
+{
+  "Qwen/Qwen3-0.6B": {
+    "model": "Qwen/Qwen3-0.6B",
+    "gpu": "A10G",
+    "max_tokens": 128,
+    "peak_output_tok_per_s": 8707.380731452366,
+    "streaming": {
+      "ttft_ms_median": 11.552695000005997,
+      "ttft_ms_p95": 12.097234999998818,
+      "inter_token_ms_median": 3.6551674330709605
+    },
+    "load": {
+      "1": {
+        "n_requests": 4,
+        "wall_s": 0.5144144500000039,
+        "output_tok_per_s": 995.3064110076926,
+        "req_per_s": 7.775831335997599,
+        "latency_ms_p50": 513.5596629999952,
+        "latency_ms_p95": 513.5596629999952
+      },
+      "4": {
+        "n_requests": 16,
+        "wall_s": 0.6008932260000108,
+        "output_tok_per_s": 3408.259423446992,
+        "req_per_s": 26.627026745679625,
+        "latency_ms_p50": 597.3219020000045,
+        "latency_ms_p95": 598.5760350000078
+      },
+      "16": {
+        "n_requests": 64,
+        "wall_s": 0.9437703099999908,
+        "output_tok_per_s": 8680.07810078289,
+        "req_per_s": 67.81311016236633,
+        "latency_ms_p50": 920.5284269999936,
+        "latency_ms_p95": 934.709913000006
+      },
+      "32": {
+        "n_requests": 128,
+        "wall_s": 1.8816220979999798,
+        "output_tok_per_s": 8707.380731452366,
+        "req_per_s": 68.0264119644716,
+        "latency_ms_p50": 1235.7317659999865,
+        "latency_ms_p95": 1813.3832059999975
+      }
+    }
+  },
+  "Qwen/Qwen3-1.7B": {
+    "model": "Qwen/Qwen3-1.7B",
+    "gpu": "A10G",
+    "max_tokens": 128,
+    "peak_output_tok_per_s": 4825.388123661418,
+    "streaming": {
+      "ttft_ms_median": 14.60512650000112,
+      "ttft_ms_p95": 14.824159999989206,
+      "inter_token_ms_median": 8.860053822834656
+    },
+    "load": {
+      "1": {
+        "n_requests": 4,
+        "wall_s": 1.1675531460000173,
+        "output_tok_per_s": 438.5239350808896,
+        "req_per_s": 3.42596824281945,
+        "latency_ms_p50": 1166.697847999984,
+        "latency_ms_p95": 1166.697847999984
+      },
+      "4": {
+        "n_requests": 16,
+        "wall_s": 1.2432075540000085,
+        "output_tok_per_s": 1647.3516376332975,
+        "req_per_s": 12.869934669010137,
+        "latency_ms_p50": 1237.9069979999997,
+        "latency_ms_p95": 1239.6664250000242
+      },
+      "16": {
+        "n_requests": 64,
+        "wall_s": 1.746831426,
+        "output_tok_per_s": 4689.6339727288605,
+        "req_per_s": 36.63776541194422,
+        "latency_ms_p50": 1725.7969169999967,
+        "latency_ms_p95": 1737.828723000007
+      },
+      "32": {
+        "n_requests": 128,
+        "wall_s": 3.3953745440000205,
+        "output_tok_per_s": 4825.388123661418,
+        "req_per_s": 37.69834471610483,
+        "latency_ms_p50": 2080.6310789999998,
+        "latency_ms_p95": 3325.1049440000033
+      }
+    }
+  },
+  "Qwen/Qwen3-4B": {
+    "model": "Qwen/Qwen3-4B",
+    "gpu": "A10G",
+    "max_tokens": 128,
+    "peak_output_tok_per_s": 2345.270781652121,
+    "streaming": {
+      "ttft_ms_median": 26.346737500006157,
+      "ttft_ms_p95": 26.790386000016042,
+      "inter_token_ms_median": 18.822862929133763
+    },
+    "load": {
+      "1": {
+        "n_requests": 4,
+        "wall_s": 2.510109220000004,
+        "output_tok_per_s": 203.97518798006695,
+        "req_per_s": 1.593556156094273,
+        "latency_ms_p50": 2509.1686549999963,
+        "latency_ms_p95": 2509.1686549999963
+      },
+      "4": {
+        "n_requests": 16,
+        "wall_s": 2.627149337999981,
+        "output_tok_per_s": 779.5521824271775,
+        "req_per_s": 6.090251425212324,
+        "latency_ms_p50": 2623.106851999978,
+        "latency_ms_p95": 2625.277734000008
+      },
+      "16": {
+        "n_requests": 64,
+        "wall_s": 3.4929868499999657,
+        "output_tok_per_s": 2345.270781652121,
+        "req_per_s": 18.322427981657196,
+        "latency_ms_p50": 3460.6602829999815,
+        "latency_ms_p95": 3482.2399860000246
+      },
+      "32": {
+        "n_requests": 128,
+        "wall_s": 7.06429783599998,
+        "output_tok_per_s": 2319.2680122441043,
+        "req_per_s": 18.119281345657065,
+        "latency_ms_p50": 4208.577865999985,
+        "latency_ms_p95": 6991.959065999992
+      }
+    }
+  }
+}
