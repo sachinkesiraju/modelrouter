@@ -1,0 +1,117 @@
+{
+  "costs_usd_per_request": {
+    "gpt-5.4-nano": 2.292876016260163e-05,
+    "gpt-5.4-mini": 8.634054878048781e-05,
+    "gpt-5.6-sol": 0.0005656280487804878
+  },
+  "capable": "gpt-5.6-sol",
+  "val_tuned_floor": 1.05,
+  "stats": [
+    {
+      "name": "always_gpt-5.4-nano",
+      "accuracy": 0.7430894308943089,
+      "cost": 2.292876016260163e-05,
+      "savings": 0.959463183956247,
+      "drop_vs_capable": 0.1634146341463415,
+      "routed_cheap_frac": 1.0
+    },
+    {
+      "name": "always_gpt-5.4-mini",
+      "accuracy": 0.8341463414634146,
+      "cost": 8.63405487804878e-05,
+      "savings": 0.8473545486885935,
+      "drop_vs_capable": 0.0723577235772358,
+      "routed_cheap_frac": 0.0
+    },
+    {
+      "name": "always_gpt-5.6-sol",
+      "accuracy": 0.9065040650406504,
+      "cost": 0.0005656280487804878,
+      "savings": 0.0,
+      "drop_vs_capable": 0.0,
+      "routed_cheap_frac": 0.0
+    },
+    {
+      "name": "oracle",
+      "accuracy": 0.9666666666666667,
+      "cost": 7.935537618150572e-05,
+      "savings": 0.8597039585420163,
+      "drop_vs_capable": -0.06016260162601628,
+      "routed_cheap_frac": 0.7430894308943089
+    },
+    {
+      "name": "prompt_floor_1.0",
+      "accuracy": 0.8967479674796748,
+      "cost": 0.0005211667557340207,
+      "savings": 0.07860517727564442,
+      "drop_vs_capable": 0.009756097560975618,
+      "routed_cheap_frac": 0.025203252032520326
+    },
+    {
+      "name": "prompt_floor_1.01",
+      "accuracy": 0.8943089430894309,
+      "cost": 0.0004982856656917178,
+      "savings": 0.11905771510794472,
+      "drop_vs_capable": 0.012195121951219523,
+      "routed_cheap_frac": 0.03577235772357724
+    },
+    {
+      "name": "prompt_floor_1.02",
+      "accuracy": 0.8926829268292683,
+      "cost": 0.0004690380483673738,
+      "savings": 0.1707659311120887,
+      "drop_vs_capable": 0.013821138211382089,
+      "routed_cheap_frac": 0.04227642276422764
+    },
+    {
+      "name": "prompt_floor_1.03",
+      "accuracy": 0.8813008130081301,
+      "cost": 0.0004197401020391301,
+      "savings": 0.25792205152466674,
+      "drop_vs_capable": 0.025203252032520274,
+      "routed_cheap_frac": 0.05772357723577236
+    },
+    {
+      "name": "prompt_floor_1.05",
+      "accuracy": 0.8707317073170732,
+      "cost": 0.0003354934915559521,
+      "savings": 0.40686553243021306,
+      "drop_vs_capable": 0.03577235772357723,
+      "routed_cheap_frac": 0.108130081300813
+    },
+    {
+      "name": "prompt_floor_1.1",
+      "accuracy": 0.8455284552845529,
+      "cost": 0.00019496031975014874,
+      "savings": 0.6553206295718725,
+      "drop_vs_capable": 0.060975609756097504,
+      "routed_cheap_frac": 0.2780487804878049
+    },
+    {
+      "name": "prompt_floor_1.2",
+      "accuracy": 0.8048780487804879,
+      "cost": 8.28705194494018e-05,
+      "savings": 0.8534893741071128,
+      "drop_vs_capable": 0.10162601626016254,
+      "routed_cheap_frac": 0.6016260162601627
+    }
+  ],
+  "val_tuned": {
+    "name": "prompt_floor_1.05",
+    "accuracy": 0.8707317073170732,
+    "cost": 0.0003354934915559521,
+    "savings": 0.40686553243021306,
+    "drop_vs_capable": 0.03577235772357723,
+    "routed_cheap_frac": 0.108130081300813
+  },
+  "val_tuned_ci": {
+    "accuracy": [
+      0.8528455284552846,
+      0.8894512195121951
+    ],
+    "savings": [
+      0.38392097066753467,
+      0.4298767061758077
+    ]
+  }
+}

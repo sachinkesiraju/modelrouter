@@ -14,7 +14,9 @@ Inspired by [Ramp Router](https://ramp.com/router) and Ramp's work on [cost-effi
 
 > **Learned routing cut inference cost by 58% while giving up only 2.8 accuracy points versus always running the largest model in the ladder (Qwen3-4B). A prompt-only router, which decides before any model runs, still cut cost by 47% at a 1.1 point drop.**
 
-All comparisons are against the largest model in the self-hosted Qwen3 0.6B / 1.7B / 4B ladder; no commercial frontier API was benchmarked (see Limitations). Measured on 14 tasks / 1,230 held-out rows with GPU-trained refits (Modal A100/A10G; `experiments/exp04_gpu_scale/`, `exp05_vllm_bench/`):
+The same router applied to a commercial frontier ladder (gpt-5.4-nano / gpt-5.4-mini / gpt-5.6, real per-request API costs) cut spend by 40.7% at a 3.6 point drop versus always calling gpt-5.6 (`experiments/exp06_commercial_api/`).
+
+Measured on 14 tasks / 1,230 held-out rows (local ladder: GPU-trained refits on Modal A100/A10G; `experiments/exp04_gpu_scale/`, `exp05_vllm_bench/`):
 
 | Result | Value |
 |---|---|
@@ -24,6 +26,8 @@ All comparisons are against the largest model in the self-hosted Qwen3 0.6B / 1.
 | Routing headroom (oracle, 3-tier) | +12.3 pp accuracy *above* always-largest at 59.2% savings |
 | Task-latent `z` tier prediction for unseen tasks | 100% leave-one-task-out |
 | vLLM task-adapter hot-swap overhead | 15.4 ms = 2.2% of a request |
+| **Commercial ladder (gpt-5.4-nano/mini → gpt-5.6, real $)** | **40.7% spend cut at −3.6 pp** (CI: 38.4–43.0%) |
+| Commercial oracle headroom | +6.0 pp accuracy *above* always-gpt-5.6 at 86% savings |
 
 CPU-scale results (reproducible on an 8 GB laptop) are in `experiments/exp01–03/*/report.md`; every number in this README traces to a JSON result file and report committed under `experiments/`.
 
@@ -55,7 +59,7 @@ Full reproduction (CPU experiments from scratch, Modal GPU runs) is documented i
 A validated research artifact plus a working single-node router, not a production service:
 
 - **Benchmark scope**: 14 multiple-choice tasks with programmatic graders; free-form generation quality is not measured.
-- **Model scope**: GPU ladder tops out at Qwen3-4B; commercial routing validated on one provider pair (Together AI).
+- **Model scope**: local GPU ladder tops out at Qwen3-4B; commercial routing validated on one provider (OpenAI, gpt-5.4-nano/mini/gpt-5.6) plus a live Together AI gateway test.
 - **Cost model**: local-tier savings use parameter-proportional costs; GPU amortization not modeled.
 - **Serving**: single-request benchmarks only; vLLM's LoRA path adds a steady ~23% latency vs the bare base (shrinks with batching). No streaming, batching, or load testing.
 - **Operations**: no multi-tenant control plane, quotas, health checks, or K8s packaging (see `docs/roadmap.md`).
