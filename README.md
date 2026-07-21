@@ -1,107 +1,64 @@
 # portal-dispatch
 
-*Route each query to the cheapest base model that can do the job — materializing the task adapter at runtime from a shared PorTAL latent.*
+*Route each query to the cheapest model that can do the job — materializing the task adapter at runtime from a shared PorTAL latent.*
 
 Inspired by [Ramp Router](https://ramp.com/router) and Ramp's work on [cost-efficient LLM routing](https://builders.ramp.com/post/thompson-sampling-model-routing).
 
 ![How portal-dispatch works](docs/assets/how-it-works.svg)
 
-`portal-dispatch` is a research prototype of a cost-aware inference router. Instead of picking among fixed API models, it (1) predicts which registered base model can answer a query correctly, (2) picks the cheapest one that clears a quality bar, and (3) materializes the task-specific LoRA adapter for that base on demand (~50 ms) from a shared [PorTAL](https://pypi.org/project/portallib/) hypernetwork latent.
+A cost-aware inference router: predict which model can answer a query, pick the cheapest one that clears a quality bar, and generate the task-specific LoRA for that model on demand from a single [PorTAL](https://pypi.org/project/portallib/) artifact (~15 ms swap on vLLM).
 
-## How it works
+## Results
 
-- **Routers** (`portal_dispatch.routing`): `ScoreRouter` (per-base score-distribution features; offline/oracle-grade), `PromptEmbeddingRouter` (MiniLM prompt embeddings; production path — no candidate forward pass), `LatentRouter` (predicts per-task base suitability from the PorTAL task latent `z`; zero-shot task routing), `TaskClassifier`.
-- **Policies** (`portal_dispatch.dispatch`): `FloorPolicy` (pre-route: cheapest base with `p * floor >= max p`), `CascadePolicy` (run cheap, escalate on low confidence).
-- **Runtime** (`portal_dispatch.runtime`): `HFBackend` loads a base once and hot-swaps task LoRAs via `PortalInjector` with an adapter cache.
-- **Gateway** (`portal_dispatch.gateway`): OpenAI-compatible `/v1/chat/completions` FastAPI app with JSONL decision traces.
-- **Eval** (`portal_dispatch.eval`): policy stats, bootstrap CIs, Pareto plots, and a machine-checkable kill-criteria gate (default: ≥15% savings at ≤3 pp accuracy drop).
+GPU-scale validation (Modal A100/A10G; Qwen3-0.6B/1.7B/4B ladder, 14 tasks, 1,230 held-out rows — `experiments/exp04_gpu_scale/`, `exp05_vllm_bench/`):
 
-## Production gateway
+| Result | Value |
+|---|---|
+| **Kill test: ≥15% savings at ≤3 pp drop** | **PASSED — 58.4% savings at −2.8 pp** (CI: 56.9–59.6%) |
+| Zero-drop operating point | 44.7% savings at −0.2 pp |
+| **Prompt-only router (live-deployable)** | **47.0% savings at −1.1 pp** (1.7B vs 4B) |
+| Oracle headroom (3-tier) | +12.3 pp accuracy over always-capable at 59.2% savings |
+| Task-latent `z` tier prediction | 100% leave-one-task-out |
+| vLLM adapter hot-swap | **15.4 ms = 2.2% of request — gate PASSED** |
 
-Beyond the research pipeline, `portal_dispatch.serve` is a production-oriented OpenAI-compatible gateway with config-not-code routing:
+CPU-scale numbers (reproducible on an 8 GB laptop) are in `experiments/exp01–03/*/report.md`.
 
-```bash
-portal-dispatch serve --config configs/routes.example.yaml
-```
+## Components
 
-- **Per-route YAML policies** — candidate models, floor, quality/fallback order, default model.
-- **Commercial-model tier** via LiteLLM (`portal_dispatch.backends.LiteLLMBackend`): OpenAI, Anthropic, Together, Gemini, ... with real $/token cost from price tables. Local PorTAL-served bases plug into the same seam (`PortalLocalBackend`).
-- **Shadow mode** — log every routing decision but always serve the default model; the zero-risk on-ramp: measure would-be savings before flipping live.
-- **Fallback chains** — on backend failure the request walks `fallback_order`; failures are recorded in the trace.
-- **API keys** — optional bearer-token auth.
-- **Abstain-to-capable** — in task-agnostic mode, low task-classifier confidence routes to the default model, so classifier mistakes cost money, never quality.
-- **Continuous learning** (`portal_dispatch.learning`) — retrain the prompt router from labeled production traces into versioned, canary-able artifacts (`retrain_from_traces`).
+- **Routers** (`routing`) — score-distribution, prompt-embedding (live path), and task-latent `z` routers, plus a task classifier.
+- **Policies** (`dispatch`) — floor (cheapest model within a quality floor) and cascade (run cheap, escalate on low confidence).
+- **Runtime** (`runtime`) — HF backend that hot-swaps PorTAL task LoRAs with an adapter cache.
+- **Gateway** (`serve`) — production OpenAI-compatible gateway: per-route YAML policies, LiteLLM commercial tier with real $/token costs, shadow mode, fallback chains, API keys, abstain-to-capable, JSONL decision traces, and router retraining from traces (`learning`). Validated live against Together AI.
+- **Eval** (`eval`) — policy stats, bootstrap CIs, Pareto plots, machine-checkable kill criteria.
 
-Every request emits a JSONL decision trace: route, decision + reason + scores, served model, fallbacks tried, cost (USD), latency, token counts.
-
-Validated live against Together AI serverless models (Qwen2.5-7B as cheap, Llama-3.3-70B as capable): shadow mode logs `decision=cheap, served=capable`; live mode serves the cheap model at ~3.4× lower measured cost per request.
-
-## Install
+## Quickstart
 
 ```bash
 pip install torch --index-url https://download.pytorch.org/whl/cpu   # or your CUDA build
 pip install -e ".[serve,plots,dev]"
-```
 
-## Reproduce the CPU validation
+# serve the gateway
+portal-dispatch serve --config configs/routes.example.yaml
 
-Everything below runs on a CPU box (~8 GB RAM). Artifacts come from the HF Hub (`RampPublic/portal-qwen3-1.7b`, `RampPublic/portallib-tasks`).
-
-```bash
-# 1. Refit the published Qwen3-1.7B artifact to Qwen3-0.6B (the cheap tier)
+# reproduce the CPU validation (all public artifacts)
 python experiments/exp01_cpu_refit/run.py
-
-# 2. Score val+test rows on both bases with the correct task LoRA
 python experiments/exp02_policy_sweep/build_bundle.py \
   --cheap-artifact experiments/exp01_cpu_refit/artifacts/refit-qwen3-0.6b
-
-# 3. Train routers on val, sweep dispatch policies on test, check kill criteria
 python experiments/exp02_policy_sweep/run.py
-
-# 4. Live end-to-end with a task classifier (measures the task-classifier tax)
-python experiments/exp03_live_e2e/run.py \
-  --cheap-artifact experiments/exp01_cpu_refit/artifacts/refit-qwen3-0.6b
 ```
 
-Results, reports, and the Pareto plot land in each experiment's `results/` directory. See `experiments/*/report.md` for the validated numbers and discussion.
-
-## Status and findings (CPU validation, 2026-07-21)
-
-All numbers below were produced by the three experiments in this repo, end to end from public artifacts, on an 8 GB / 2-core CPU box:
-
-| Result | Value | Where |
-|---|---|---|
-| 0.6B refit beats pre-refit baseline | +10.0 pp macro (48.1% → 58.1%) | `exp01_cpu_refit/report.md` |
-| **Kill test: ≥15% savings at ≤3 pp drop** | **PASSED** — val-tuned score-floor: 19.0% savings, −2.9 pp (CI: 16.2–22.6% savings) | `exp02_policy_sweep/report.md` |
-| Oracle routing headroom | +5.7 pp accuracy at 40% savings | `exp02_policy_sweep/report.md` |
-| Task-latent `z` zero-shot task routing | 78.6% leave-one-task-out | `exp02_policy_sweep/report.md` |
-| Task classifier (live e2e) | 81.2% accuracy; ~3 pp tax on this slice | `exp03_live_e2e/report.md` |
-
-## GPU-scale validation (Modal A100, 2026-07-21)
-
-The decisive P0 experiment (`experiments/exp04_gpu_scale/`): Qwen3-0.6B/1.7B/4B ladder, refits with 300 train/task, 1230 held-out test rows:
-
-| Result | Value |
-|---|---|
-| **Kill test (3-tier)** | **PASSED** — val-tuned score-floor: **58.4% savings at −2.8 pp** (CI: 56.9–59.6%) |
-| Zero-drop operating point | floor 1.1: 44.7% savings at −0.2 pp |
-| 3-tier oracle headroom | +12.3 pp accuracy at 59.2% savings |
-| **Prompt-only router (live-deployable), 1.7B vs 4B** | **47.0% savings at −1.1 pp** |
-| Task-latent `z` tier prediction | 100% leave-one-task-out |
-| vLLM adapter hot-swap (exp05, A10G) | **15.4 ms = 2.2% of request — gate PASSED** |
-
-Dispatch works when the task is known, and at GPU scale the live prompt-only signal works too — the fragile 0.6B cheap tier was a CPU-scale artifact. Both P0 gates (routing headroom, vLLM swap overhead) have now passed; see `experiments/exp04_gpu_scale/` and `experiments/exp05_vllm_bench/`.
+See `docs/architecture.md` and `docs/roadmap.md` for design and the productization plan.
 
 ## Limitations
 
-This is a validated research artifact plus a working single-node router — not a production service. Know what the numbers do and don't cover:
+A validated research artifact plus a working single-node router — not a production service:
 
-- **Benchmark scope.** All quality/savings numbers come from 14 multiple-choice tasks (up to 1,230 held-out rows at GPU scale) with programmatic graders. Free-form generation quality is not measured; your workload needs its own oracle benchmark (the eval harness builds one from prompts + graders).
-- **Model scope.** The GPU ladder tops out at Qwen3-4B. Whether the same headroom holds against frontier-class models is untested; commercial routing was validated live on one provider pair (Together AI), not a broad approved-model catalog.
-- **Cost model.** Local-tier savings use parameter-count-proportional costs; real $/token applies only to the LiteLLM commercial tier. GPU amortization for self-hosted serving is not modeled.
-- **Serving.** The vLLM benchmark measures single-request adapter-swap latency on one A10G. vLLM's LoRA path adds a steady ~23% latency vs the bare base (a serving-stack constant that shrinks with batching). No streaming, batching/coalescing, semantic cache, or load testing.
-- **Operations.** No multi-tenant control plane, quotas/spend limits, provider health checks, distributed queues, ClickHouse/OTel pipeline, or K8s packaging — that's the P2–P4 roadmap (`docs/roadmap.md`).
-- **Task-agnostic mode.** The live pipeline assumes the route (or classifier) supplies the task; auto-classification is guarded by abstain-to-capable but only lightly validated (81% classifier accuracy on a 4-task slice).
+- **Benchmark scope** — 14 multiple-choice tasks with programmatic graders; free-form generation quality is not measured.
+- **Model scope** — GPU ladder tops out at Qwen3-4B; commercial routing validated on one provider pair (Together AI).
+- **Cost model** — local-tier savings use parameter-proportional costs; GPU amortization not modeled.
+- **Serving** — single-request benchmarks only; vLLM's LoRA path adds a steady ~23% latency vs the bare base (shrinks with batching). No streaming, batching, or load testing.
+- **Operations** — no multi-tenant control plane, quotas, health checks, or K8s packaging (see `docs/roadmap.md`).
+- **Task-agnostic mode** — lightly validated; guarded by abstain-to-capable.
 
 ## License
 
