@@ -1,0 +1,31 @@
+{
+  "source": "RampPublic/portal-qwen3-1.7b",
+  "target": "Qwen/Qwen3-0.6B",
+  "tag": "refit-0.6b-gpu",
+  "epochs": 3,
+  "train_per_task": 300,
+  "best_epoch": 3,
+  "history": [
+    {
+      "epoch": 0,
+      "macro_accuracy": 0.48095238095238096,
+      "macro_gold_nll": 3.28771646694231
+    },
+    {
+      "epoch": 1,
+      "macro_accuracy": 0.5285714285714286,
+      "macro_gold_nll": 1.8868745881454478
+    },
+    {
+      "epoch": 2,
+      "macro_accuracy": 0.5190476190476191,
+      "macro_gold_nll": 1.9485434578312173
+    },
+    {
+      "epoch": 3,
+      "macro_accuracy": 0.5666666666666667,
+      "macro_gold_nll": 1.9972545005991815
+    }
+  ],
+  "artifact": "/vol/artifacts/refit-0.6b-gpu"
+}

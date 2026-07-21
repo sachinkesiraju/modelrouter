@@ -1,0 +1,31 @@
+{
+  "source": "RampPublic/portal-qwen3-1.7b",
+  "target": "Qwen/Qwen3-4B",
+  "tag": "refit-4b-gpu",
+  "epochs": 3,
+  "train_per_task": 300,
+  "best_epoch": 3,
+  "history": [
+    {
+      "epoch": 0,
+      "macro_accuracy": 0.6476190476190476,
+      "macro_gold_nll": 4.865540318618216
+    },
+    {
+      "epoch": 1,
+      "macro_accuracy": 0.6952380952380953,
+      "macro_gold_nll": 1.5030890789881088
+    },
+    {
+      "epoch": 2,
+      "macro_accuracy": 0.6857142857142857,
+      "macro_gold_nll": 1.6597424657358997
+    },
+    {
+      "epoch": 3,
+      "macro_accuracy": 0.7761904761904762,
+      "macro_gold_nll": 1.6551931063718281
+    }
+  ],
+  "artifact": "/vol/artifacts/refit-4b-gpu"
+}

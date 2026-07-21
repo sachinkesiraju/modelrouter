@@ -24,14 +24,16 @@ def refit_artifact(
     batch_size: int = 2,
     refit_max_examples: int = 2000,
     dtype: str = "bfloat16",
+    device: str | None = None,
     output_dir: str | Path | None = None,
     on_epoch=None,
 ) -> RefitResult:
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    source = PortalModel.from_pretrained(source_artifact)
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    source = PortalModel.from_pretrained(source_artifact, device=device)
     tokenizer = AutoTokenizer.from_pretrained(target_model_id)
-    model = AutoModelForCausalLM.from_pretrained(target_model_id, dtype=getattr(torch, dtype))
+    model = AutoModelForCausalLM.from_pretrained(target_model_id, dtype=getattr(torch, dtype)).to(device)
     target = PortalBase(model_id=target_model_id, model=model, tokenizer=tokenizer)
     target.freeze()
     config = PortalTrainingConfig(

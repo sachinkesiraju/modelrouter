@@ -42,6 +42,7 @@ def make_splits(
         train[task] = train_rows[:train_per_task]
         heldout = list(dataset.rows("validation", task))
         rng.shuffle(heldout)
-        val[task] = heldout[:val_per_task]
-        test[task] = heldout[val_per_task : val_per_task + test_per_task]
+        n_val = min(val_per_task, len(heldout) // 2)  # small tasks still get a test slice
+        val[task] = heldout[:n_val]
+        test[task] = heldout[n_val : n_val + test_per_task]
     return SuiteSplits(train=train, val=val, test=test)

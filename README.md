@@ -88,7 +88,19 @@ All numbers below were produced by the three experiments in this repo, end to en
 | Task-latent `z` zero-shot task routing | 78.6% leave-one-task-out | `exp02_policy_sweep/report.md` |
 | Task classifier (live e2e) | 81.2% accuracy; ~3 pp tax on this slice | `exp03_live_e2e/report.md` |
 
-Dispatch works when the task is known; prompt-only routing is safe but conservative; known-skill deployment is the near-term sweet spot. The decisive next experiment is GPU-scale (Qwen3 1.7B/4B/8B + vLLM), tracked in `docs/roadmap.md`.
+## GPU-scale validation (Modal A100, 2026-07-21)
+
+The decisive P0 experiment (`experiments/exp04_gpu_scale/`): Qwen3-0.6B/1.7B/4B ladder, refits with 300 train/task, 1230 held-out test rows:
+
+| Result | Value |
+|---|---|
+| **Kill test (3-tier)** | **PASSED** — val-tuned score-floor: **58.4% savings at −2.8 pp** (CI: 56.9–59.6%) |
+| Zero-drop operating point | floor 1.1: 44.7% savings at −0.2 pp |
+| 3-tier oracle headroom | +12.3 pp accuracy at 59.2% savings |
+| **Prompt-only router (live-deployable), 1.7B vs 4B** | **47.0% savings at −1.1 pp** |
+| Task-latent `z` tier prediction | 100% leave-one-task-out |
+
+Dispatch works when the task is known, and at GPU scale the live prompt-only signal works too — the fragile 0.6B cheap tier was a CPU-scale artifact. Remaining production gate: vLLM adapter-swap overhead (`docs/roadmap.md`).
 
 ## License
 

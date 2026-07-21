@@ -21,6 +21,7 @@ class HFBackend:
     dtype: str = "bfloat16"
     batch_size: int = 8
     max_prompt: int = 768
+    device: str | None = None
 
     portal: PortalModel = field(init=False, repr=False)
     model: Any = field(init=False, repr=False)
@@ -33,9 +34,12 @@ class HFBackend:
         from portallib import PortalBase
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
-        self.portal = PortalModel.from_pretrained(self.artifact_id)
+        device = self.device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.portal = PortalModel.from_pretrained(self.artifact_id, device=device)
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_id, dtype=getattr(torch, self.dtype))
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.model_id, dtype=getattr(torch, self.dtype)
+        ).to(device)
         self.model.eval()
         self.base = PortalBase(model_id=self.model_id, model=self.model, tokenizer=self.tokenizer)
         self._injector = PortalInjector(self.model, self.portal.config)
