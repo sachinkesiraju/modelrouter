@@ -1,7 +1,0 @@
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|████▉     | 154/311 [00:00<00:00, 1294.92it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1580.12it/s]
-epoch: {'epoch': 0, 'macro_accuracy': 0.48095238095238096, 'macro_gold_nll': 3.2958892723110247}
-epoch: {'epoch': 1, 'macro_accuracy': 0.5428571428571428, 'macro_gold_nll': 2.2603843740930687}
-epoch: {'epoch': 2, 'macro_accuracy': 0.5809523809523809, 'macro_gold_nll': 2.087780667590725}
-epoch: {'epoch': 3, 'macro_accuracy': 0.5285714285714286, 'macro_gold_nll': 2.590057440122517}
-saved artifact to /home/ubuntu/repos/portal-dispatch/experiments/exp01_cpu_refit/artifacts/refit-qwen3-0.6b

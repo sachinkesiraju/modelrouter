@@ -1,19 +1,0 @@
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-loading cheap: Qwen/Qwen3-0.6B
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 51892.77it/s]
-cheap val truthfulqa: 15 rows in 13.7s
-cheap val rte: 15 rows in 19.5s
-cheap val cb: 15 rows in 28.7s
-cheap val copa: 15 rows in 3.3s
-cheap val wic: 15 rows in 8.4s
-cheap val wsc: 15 rows in 11.8s
-cheap val boolq: 15 rows in 41.1s
-cheap val arc_easy: 15 rows in 12.8s
-cheap val arc_challenge: 15 rows in 16.3s
-cheap val hellaswag: 15 rows in 41.5s
-cheap val openbookqa: 15 rows in 8.9s
-cheap val winogrande: 15 rows in 5.0s
-cheap val commonsense_qa: 15 rows in 15.1s
-cheap val sciq: 15 rows in 9.6s
-cheap test truthfulqa: 15 rows in 14.9s
-cheap test rte: 15 rows in 21.5s

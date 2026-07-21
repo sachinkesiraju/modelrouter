@@ -56,9 +56,19 @@ python experiments/exp03_live_e2e/run.py \
 
 Results, reports, and the Pareto plot land in each experiment's `results/` directory. See `experiments/*/report.md` for the validated numbers and discussion.
 
-## Status and findings
+## Status and findings (CPU validation, 2026-07-21)
 
-See `experiments/exp02_policy_sweep/report.md` for the current CPU-scale validation. Headline: dispatch works when the task is known; the score-router floor policy clears the ≥15%-savings / ≤3 pp-drop kill test, prompt-only routing is close behind, and the task latent `z` predicts per-task base suitability leave-one-task-out. The 0.6B refit is fragile to task-classifier mistakes, so known-skill deployment is the near-term sweet spot; the decisive experiment is GPU-scale (Qwen3 1.7B/4B/8B + vLLM), tracked in `docs/roadmap.md`.
+All numbers below were produced by the three experiments in this repo, end to end from public artifacts, on an 8 GB / 2-core CPU box:
+
+| Result | Value | Where |
+|---|---|---|
+| 0.6B refit beats pre-refit baseline | +10.0 pp macro (48.1% → 58.1%) | `exp01_cpu_refit/report.md` |
+| **Kill test: ≥15% savings at ≤3 pp drop** | **PASSED** — val-tuned score-floor: 19.0% savings, −2.9 pp (CI: 16.2–22.6% savings) | `exp02_policy_sweep/report.md` |
+| Oracle routing headroom | +5.7 pp accuracy at 40% savings | `exp02_policy_sweep/report.md` |
+| Task-latent `z` zero-shot task routing | 78.6% leave-one-task-out | `exp02_policy_sweep/report.md` |
+| Task classifier (live e2e) | 81.2% accuracy; ~3 pp tax on this slice | `exp03_live_e2e/report.md` |
+
+Dispatch works when the task is known; prompt-only routing is safe but conservative; known-skill deployment is the near-term sweet spot. The decisive next experiment is GPU-scale (Qwen3 1.7B/4B/8B + vLLM), tracked in `docs/roadmap.md`.
 
 ## License
 

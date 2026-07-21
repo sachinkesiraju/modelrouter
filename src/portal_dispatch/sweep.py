@@ -70,7 +70,7 @@ def run_policy_sweep(bundle_path: str, out_path: str, *, with_prompt_router: boo
 
     # Cascade: cheap-base score margin as confidence; escalation adds cheap cost to escalated rows.
     margins = np.array([score_features(r["scores"][cheap])[2] for r in test])
-    conf = (margins - margins.min()) / (margins.ptp() + 1e-9)
+    conf = (margins - margins.min()) / (np.ptp(margins) + 1e-9)
     for thr in (0.3, 0.5):
         policy = CascadePolicy(threshold=thr)
         chosen = np.array([policy.decide(float(conf[i]), bases).chosen for i in range(n)])

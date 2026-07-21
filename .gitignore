@@ -5,3 +5,4 @@ results/*.joblib
 experiments/*/artifacts/
 .venv/
 dist/
+*.log
