@@ -1,0 +1,117 @@
+{
+  "costs_usd_per_request": {
+    "together_ai/Qwen/Qwen2.5-7B-Instruct-Turbo": 7.4176e-05,
+    "together_ai/openai/gpt-oss-20b": 0.000118397,
+    "together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo": 0.000271797
+  },
+  "capable": "together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo",
+  "val_tuned_floor": 1.03,
+  "stats": [
+    {
+      "name": "always_Qwen2.5-7B-Instruct-Turbo",
+      "accuracy": 0.9133333333333333,
+      "cost": 7.417599999999999e-05,
+      "savings": 0.7270904388201489,
+      "drop_vs_capable": 0.06666666666666665,
+      "routed_cheap_frac": 1.0
+    },
+    {
+      "name": "always_gpt-oss-20b",
+      "accuracy": 0.9133333333333333,
+      "cost": 0.00011839699999999997,
+      "savings": 0.5643918071207557,
+      "drop_vs_capable": 0.06666666666666665,
+      "routed_cheap_frac": 0.0
+    },
+    {
+      "name": "always_Llama-3.3-70B-Instruct-Turbo",
+      "accuracy": 0.98,
+      "cost": 0.000271797,
+      "savings": 0.0,
+      "drop_vs_capable": 0.0,
+      "routed_cheap_frac": 0.0
+    },
+    {
+      "name": "oracle",
+      "accuracy": 0.9866666666666667,
+      "cost": 8.516715333333333e-05,
+      "savings": 0.6866516064072329,
+      "drop_vs_capable": -0.00666666666666671,
+      "routed_cheap_frac": 0.9133333333333333
+    },
+    {
+      "name": "prompt_floor_1.0",
+      "accuracy": 0.98,
+      "cost": 0.000271797,
+      "savings": 0.0,
+      "drop_vs_capable": 0.0,
+      "routed_cheap_frac": 0.0
+    },
+    {
+      "name": "prompt_floor_1.01",
+      "accuracy": 0.98,
+      "cost": 0.000271797,
+      "savings": 0.0,
+      "drop_vs_capable": 0.0,
+      "routed_cheap_frac": 0.0
+    },
+    {
+      "name": "prompt_floor_1.02",
+      "accuracy": 0.9666666666666667,
+      "cost": 0.00025993974,
+      "savings": 0.04362542632920885,
+      "drop_vs_capable": 0.013333333333333308,
+      "routed_cheap_frac": 0.06
+    },
+    {
+      "name": "prompt_floor_1.03",
+      "accuracy": 0.9466666666666667,
+      "cost": 0.00016112924000000003,
+      "savings": 0.4071706457392833,
+      "drop_vs_capable": 0.033333333333333326,
+      "routed_cheap_frac": 0.56
+    },
+    {
+      "name": "prompt_floor_1.05",
+      "accuracy": 0.9133333333333333,
+      "cost": 7.417599999999999e-05,
+      "savings": 0.7270904388201489,
+      "drop_vs_capable": 0.06666666666666665,
+      "routed_cheap_frac": 1.0
+    },
+    {
+      "name": "prompt_floor_1.1",
+      "accuracy": 0.9133333333333333,
+      "cost": 7.417599999999999e-05,
+      "savings": 0.7270904388201489,
+      "drop_vs_capable": 0.06666666666666665,
+      "routed_cheap_frac": 1.0
+    },
+    {
+      "name": "prompt_floor_1.2",
+      "accuracy": 0.9133333333333333,
+      "cost": 7.417599999999999e-05,
+      "savings": 0.7270904388201489,
+      "drop_vs_capable": 0.06666666666666665,
+      "routed_cheap_frac": 1.0
+    }
+  ],
+  "val_tuned": {
+    "name": "prompt_floor_1.03",
+    "accuracy": 0.9466666666666667,
+    "cost": 0.00016112924000000003,
+    "savings": 0.4071706457392833,
+    "drop_vs_capable": 0.033333333333333326,
+    "routed_cheap_frac": 0.56
+  },
+  "val_tuned_ci": {
+    "accuracy": [
+      0.9066666666666666,
+      0.9733333333333334
+    ],
+    "savings": [
+      0.34900341063367135,
+      0.4556433416606265
+    ]
+  }
+}
