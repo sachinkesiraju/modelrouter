@@ -30,7 +30,7 @@ Measured on 14 tasks / 1,230 held-out rows:
 | Free-form generation (GSM8K exact match) on a Together AI ladder (7B/20B/70B) at real API prices | 40.7% spend cut at −3.3 pp (CI: 34.9–45.6%) |
 | Task-agnostic mode: classify the task from the prompt, abstain to the largest model when unsure | matches known-task routing at zero accuracy tax |
 
-Full reproduction (Modal GPU runs, OpenAI scoring) is documented in each experiment's report under [`experiments`](experiments/).
+Full reproduction (Modal GPU runs, OpenAI scoring) is documented in each experiment's report under [`experiments`](experiments/). The trained weights (refitted PorTAL artifacts for Qwen3-0.6B/4B and the exported task LoRA adapters for Qwen3-1.7B) are published in the [weights-v1 release](https://github.com/sachinkesiraju/modelrouter/releases/tag/weights-v1).
 
 ## Architecture
 
