@@ -2,6 +2,12 @@
 # Run: modelrouter serve --config configs/routes.example.yaml
 api_keys: []   # empty = open; else list of accepted bearer tokens
 
+# Optional per-key quotas (fixed-window). default_limits applies to keys
+# without an explicit key_limits entry.
+# default_limits: {requests_per_minute: 120}
+# key_limits:
+#   some-key: {requests_per_minute: 60, requests_per_day: 10000}
+
 routes:
   default:
     shadow_mode: true          # log routing decisions but always serve default_model

@@ -126,3 +126,21 @@ modal run experiments/exp01_gpu_scale/modal_app.py::score --spec-json '{
 modal volume get modelrouter results/scores_bundle_gpu.joblib \
   experiments/exp01_gpu_scale/results/scores_bundle_gpu.joblib
 ```
+
+## Extending the ladder past 4B (prepared, not run)
+
+`refit` and `score` take arbitrary targets; adding a Qwen3-8B top tier is two commands
+(~1.5 A100-hours, ~$6) plus a `load_bench` run for its measured cost:
+
+```bash
+modal run experiments/exp01_gpu_scale/modal_app.py::refit \
+  --target Qwen/Qwen3-8B --tag refit-8b-gpu
+modal run experiments/exp01_gpu_scale/modal_app.py::score --spec-json '{
+  "cheap":   ["Qwen/Qwen3-0.6B", "/vol/artifacts/refit-0.6b-gpu", 1.0],
+  "mid":     ["Qwen/Qwen3-1.7B", "RampPublic/portal-qwen3-1.7b", 2.83],
+  "capable": ["Qwen/Qwen3-4B",   "/vol/artifacts/refit-4b-gpu",  6.67],
+  "top":     ["Qwen/Qwen3-8B",   "/vol/artifacts/refit-8b-gpu",  13.3]}' \
+  --out-name scores_bundle_8b.joblib
+```
+
+No 8B results are reported here because these commands have not been run.
