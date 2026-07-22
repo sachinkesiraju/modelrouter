@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Route each query to the cheapest base model that can do the job, materializing the task adapter at runtime from a shared PorTAL latent."
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "portallib>=0.1.2",
     "torch>=2.2",
@@ -34,7 +34,12 @@ packages = ["src/modelrouter"]
 
 [tool.ruff]
 line-length = 110
-target-version = "py310"
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 import torch
 from portallib import ChoiceExample, PortalModel
@@ -37,8 +37,9 @@ class HFBackend:
         device = self.device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.portal = PortalModel.from_pretrained(self.artifact_id, device=device)
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_id, dtype=getattr(torch, self.dtype)
+        auto_cls = cast(Any, AutoModelForCausalLM)
+        self.model = auto_cls.from_pretrained(
+            self.model_id, torch_dtype=getattr(torch, self.dtype)
         ).to(device)
         self.model.eval()
         self.base = PortalBase(model_id=self.model_id, model=self.model, tokenizer=self.tokenizer)

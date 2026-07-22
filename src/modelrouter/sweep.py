@@ -60,9 +60,9 @@ def run_policy_sweep(bundle_path: str, out_path: str, *, with_prompt_router: boo
     probs_test = router.predict_proba({b: _features(test, b) for b in costs})
     floor_rows = {}
     for floor in (1.0, 1.1, 1.2, 1.5, 2.0):
-        policy = FloorPolicy(floor=floor)
+        floor_policy = FloorPolicy(floor=floor)
         chosen = np.array(
-            [policy.decide({b: probs_test[b][i] for b in costs}, bases).chosen for i in range(n)]
+            [floor_policy.decide({b: probs_test[b][i] for b in costs}, bases).chosen for i in range(n)]
         )
         stats = policy_stats(f"score_floor_{floor}", chosen, correct, costs, capable)
         results.append(stats)
@@ -72,8 +72,8 @@ def run_policy_sweep(bundle_path: str, out_path: str, *, with_prompt_router: boo
     margins = np.array([score_features(r["scores"][cheap])[2] for r in test])
     conf = (margins - margins.min()) / (np.ptp(margins) + 1e-9)
     for thr in (0.3, 0.5):
-        policy = CascadePolicy(threshold=thr)
-        chosen = np.array([policy.decide(float(conf[i]), bases).chosen for i in range(n)])
+        cascade_policy = CascadePolicy(threshold=thr)
+        chosen = np.array([cascade_policy.decide(float(conf[i]), bases).chosen for i in range(n)])
         extra = np.array([costs[cheap] if c == capable else 0.0 for c in chosen])
         results.append(policy_stats(f"cascade_{thr}", chosen, correct, costs, capable, extra_cost=extra))
 
@@ -109,9 +109,9 @@ def run_policy_sweep(bundle_path: str, out_path: str, *, with_prompt_router: boo
     probs_val = router.predict_proba({b: _features(val, b) for b in costs})
     best_floor, best_savings = 1.0, -1.0
     for floor in (1.0, 1.05, 1.1, 1.15, 1.2, 1.3, 1.5):
-        policy = FloorPolicy(floor=floor)
+        val_policy = FloorPolicy(floor=floor)
         chosen_v = np.array(
-            [policy.decide({b: probs_val[b][i] for b in costs}, bases).chosen for i in range(len(val))]
+            [val_policy.decide({b: probs_val[b][i] for b in costs}, bases).chosen for i in range(len(val))]
         )
         s = policy_stats(f"val_floor_{floor}", chosen_v, correct_val, costs, capable)
         if s.drop_vs_capable <= 0.03 and s.savings > best_savings:

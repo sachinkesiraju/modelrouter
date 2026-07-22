@@ -45,7 +45,7 @@ def policy_stats(
     cost = float(np.mean([costs[b] for b in chosen])) + (float(np.mean(extra_cost)) if extra_cost is not None else 0.0)
     capable_cost = costs[capable]
     capable_acc = float(np.mean(correct[capable]))
-    cheap_name = min(costs, key=costs.get)
+    cheap_name = min(costs, key=lambda k: costs[k])
     return PolicyStats(
         name=name,
         accuracy=acc,

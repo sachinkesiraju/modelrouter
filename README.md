@@ -23,7 +23,7 @@ Measured on 14 tasks / 1,230 held-out rows:
 | Same policy tuned for near-zero quality loss | 44.7% savings at −0.2 pp |
 | Prompt-only router: decides from the prompt alone, before any model runs | 47.0% savings at −1.1 pp (1.7B vs 4B) |
 | Oracle upper bound: a perfect router picking the best tier per request | +12.3 pp accuracy *above* always-largest at 59.2% savings |
-| Predicting the right tier for a never-seen task from its PorTAL latent `z` | 100% leave-one-task-out accuracy |
+| Predicting the right tier for a held-out known task from its PorTAL latent `z` | 100% 14-task leave-one-task-out accuracy |
 | Cost of swapping a task LoRA adapter on a live vLLM server | 15.4 ms = 2.2% of a request |
 | Same routing on an OpenAI ladder (gpt-5.4-nano/mini → gpt-5.6) at real API prices | 40.7% spend cut at −3.6 pp (CI: 38.4–43.0%) |
 | Oracle upper bound on the OpenAI ladder | +6.0 pp accuracy *above* always-gpt-5.6 at 86% savings |
@@ -38,7 +38,7 @@ Full reproduction (Modal GPU runs, OpenAI scoring) is documented in each experim
 client (OpenAI SDK)
    │
    ▼
-Gateway (/v1/chat/completions)        modelrouter.gateway
+Gateway (/v1/chat/completions)        modelrouter.serve
    │  task = caller-supplied or TaskClassifier(prompt)
    ▼
 Router                                 modelrouter.routing
@@ -47,17 +47,22 @@ Router                                 modelrouter.routing
 DispatchPolicy                         modelrouter.dispatch
    │  cheapest model with p * floor >= max p   (or cascade + escalation)
    ▼
-Backend                                modelrouter.runtime
-   │  PortalModel.generate(task) → PortalInjector.activate → forward
+Backend                                modelrouter.runtime / modelrouter.backends
+   │  backend: litellm  → OpenAI/Anthropic/Together/etc.
+   │  backend: portal   → HFBackend.load → PortalModel.generate → PortalInjector.activate → forward
+   │  backend: vllm     → vLLM LLM engine + LoRARequest hot-swap (experimental)
    ▼
 TraceJournal                           modelrouter.tracing
       JSONL: prompt, task, candidates, chosen, reason, scores
+
+`modelrouter.scoring_gateway` is a test/demo scoring app, not the production server.
 ```
 
 - **Routers** (`routing`): trained offline on per-(query, model) correctness. Prompt-embedding router on the hot path; score-distribution and task-latent `z` routers for oracle labels and unseen tasks.
 - **Policies** (`dispatch`): one knob — floor (cheapest model within a quality floor) or cascade (run cheap, escalate on low confidence).
-- **Backends** (`runtime`, `backends`): one seam hiding HF with PorTAL LoRA hot-swap and a LiteLLM commercial tier with real $/token costs.
-- **Gateway** (`serve`): OpenAI-compatible server — YAML route policies, shadow mode, fallbacks, API keys, JSONL traces, retraining from traces.
+- **Backends** (`runtime`, `backends`): one seam hiding HF with PorTAL LoRA hot-swap, an experimental vLLM LoRA hot-swap backend, and a LiteLLM commercial tier with real $/token costs.
+- **Gateway** (`serve`): production OpenAI-compatible server — YAML route policies, shadow mode, fallbacks, API keys, JSONL traces, retraining from traces.
+- **Scoring demo** (`scoring_gateway`): test/demo app that scores multiple-choice answers through the routing logic. Not the production server.
 - **Eval** (`eval`): policy stats, bootstrap CIs, and a machine-checkable quality/cost acceptance gate.
 
 ## Quickstart
@@ -66,8 +71,11 @@ TraceJournal                           modelrouter.tracing
 pip install torch --index-url https://download.pytorch.org/whl/cpu   # or your CUDA build
 pip install -e ".[serve,plots,dev]"
 
-# serve the gateway
+# serve the gateway (commercial-only example)
 modelrouter serve --config configs/routes.example.yaml
+
+# serve with a PorTAL-served local tier (requires a refit artifact first)
+modelrouter serve --config configs/routes.portal.example.yaml
 
 # reproduce the headline table from the committed GPU score bundles (no GPU needed)
 python experiments/exp01_gpu_scale/run_sweep.py
@@ -81,6 +89,7 @@ docker compose up
 A validated research artifact plus a working single-node router, not a production service:
 
 - Local ladder tops out at Qwen3-4B.
+- `backend: portal` in the gateway is wired but has not been load-tested beyond the vLLM swap benchmark in `experiments/exp02_vllm_bench`.
 - Not production-hardened: no multi-tenant control plane or K8s packaging (see the [roadmap](docs/roadmap.md)).
 
 ## License

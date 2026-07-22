@@ -53,7 +53,7 @@ def bench(model_id: str = "Qwen/Qwen3-1.7B", artifact: str = "RampPublic/portal-
     portal = PortalModel.from_pretrained(artifact)
     tasks = list(portal.config.tasks)[:n_tasks]
     export_ms = {}
-    base = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.bfloat16)
+    base = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16)
     for task in tasks:
         out = f"{VOL}/peft/{task}"
         if not os.path.exists(f"{out}/adapter_model.safetensors"):

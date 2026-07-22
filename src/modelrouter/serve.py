@@ -33,7 +33,8 @@ from typing import Any
 import yaml
 from pydantic import BaseModel
 
-from .backends import Completion, CompletionBackend, LiteLLMBackend
+from .backends import Completion, CompletionBackend, LiteLLMBackend, PortalLocalBackend, VLLMBackend
+from .runtime import HFBackend
 from .dispatch import BaseSpec, FloorPolicy, RoutingDecision
 from .tracing import TraceJournal
 
@@ -46,6 +47,8 @@ class ModelSpec:
     price_per_1k_input: float | None = None
     price_per_1k_output: float | None = None
     rank_cost: float | None = None  # relative cost used for routing order; defaults to price
+    artifact_id: str | None = None  # PorTAL artifact id for backend: portal
+    backend_kwargs: dict[str, Any] = field(default_factory=dict)  # passed to HFBackend
 
 
 @dataclass
@@ -140,6 +143,39 @@ def build_backends(route: RouteConfig, overrides: dict[str, CompletionBackend] |
                 price_per_1k_input=spec.price_per_1k_input,
                 price_per_1k_output=spec.price_per_1k_output,
             )
+        elif spec.backend == "portal":
+            if not spec.artifact_id:
+                raise ValueError(f"backend 'portal' for {spec.name!r} requires artifact_id")
+            if route.task is None:
+                raise ValueError(f"backend 'portal' for {spec.name!r} requires route.task")
+            hf = HFBackend(
+                model_id=spec.model,
+                artifact_id=spec.artifact_id,
+                **spec.backend_kwargs,
+            )
+            hf.load()
+            backends[spec.name] = PortalLocalBackend(
+                name=spec.name,
+                hf_backend=hf,
+                task=route.task,
+                cost_per_1k_tokens=_rank_cost(spec),
+            )
+        elif spec.backend == "vllm":
+            if not spec.artifact_id:
+                raise ValueError(f"backend 'vllm' for {spec.name!r} requires artifact_id")
+            if route.task is None:
+                raise ValueError(f"backend 'vllm' for {spec.name!r} requires route.task")
+            vllm = VLLMBackend(
+                name=spec.name,
+                model=spec.model,
+                artifact_id=spec.artifact_id,
+                task=route.task,
+                cost_per_1k_tokens=_rank_cost(spec),
+                dtype=spec.backend_kwargs.get("dtype", "bfloat16"),
+                backend_kwargs={k: v for k, v in spec.backend_kwargs.items() if k != "dtype"},
+            )
+            vllm.load()
+            backends[spec.name] = vllm
         else:
             raise ValueError(f"unknown backend type {spec.backend!r} for model {spec.name!r}")
     return backends

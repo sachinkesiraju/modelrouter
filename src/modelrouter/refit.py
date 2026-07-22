@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, cast
 
 import torch
 from portallib import (
@@ -33,7 +34,10 @@ def refit_artifact(
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     source = PortalModel.from_pretrained(source_artifact, device=device)
     tokenizer = AutoTokenizer.from_pretrained(target_model_id)
-    model = AutoModelForCausalLM.from_pretrained(target_model_id, dtype=getattr(torch, dtype)).to(device)
+    auto_cls = cast(Any, AutoModelForCausalLM)
+    model = auto_cls.from_pretrained(
+        target_model_id, torch_dtype=getattr(torch, dtype)
+    ).to(device)
     target = PortalBase(model_id=target_model_id, model=model, tokenizer=tokenizer)
     target.freeze()
     config = PortalTrainingConfig(

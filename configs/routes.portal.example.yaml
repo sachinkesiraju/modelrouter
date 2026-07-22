@@ -1,0 +1,41 @@
+# Example production gateway config with a local PorTAL-served ladder.
+#
+# The cheap tier uses a Qwen3-0.6B base with a refit PorTAL artifact;
+# the capable tier uses the public Qwen3-1.7B source artifact.
+# Generate the 0.6B refit first:
+#
+#   modal run experiments/exp01_gpu_scale/modal_app.py::refit \
+#     --target Qwen/Qwen3-0.6B --tag refit-0.6b
+#
+# Then run:
+#   modelrouter serve --config configs/routes.portal.example.yaml
+
+api_keys: []   # empty = open; else list of accepted bearer tokens
+
+routes:
+  default:
+    shadow_mode: true          # log routing decisions but always serve default_model
+    default_model: capable
+    floor: 1.2
+    task: rte                  # known-skill route; portal backend needs a task name
+    abstain_below: 0.55        # abstain-to-capable when task classifier is unsure
+    fallback_order: [capable]
+    models:
+      - name: cheap
+        backend: portal
+        model: Qwen/Qwen3-0.6B
+        artifact_id: /vol/artifacts/refit-0.6b   # replace with your refit artifact
+        rank_cost: 1.0                           # routing / cost accounting for local tier
+        backend_kwargs:
+          dtype: bfloat16
+          batch_size: 8
+          max_prompt: 768
+      - name: capable
+        backend: portal
+        model: Qwen/Qwen3-1.7B
+        artifact_id: RampPublic/portal-qwen3-1.7b
+        rank_cost: 2.83                          # must be > cheap rank_cost for routing
+        backend_kwargs:
+          dtype: bfloat16
+          batch_size: 8
+          max_prompt: 768
