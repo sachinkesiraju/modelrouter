@@ -10,7 +10,7 @@
 - **Task-agnostic mode is not viable yet.** With a 75%-accurate task classifier, the 0.6B refit collapses (−10.7 pp at 30.7% savings). The bottleneck is task-classifier error × cheap-base fragility, not the base router.
 - **Prompt-only routing is safe but conservative** (13.5% savings, −3.3 pp at δ=0; 1–5% savings at ≤2.5 pp in the ablation). The task latent `z` predicts per-task cheap-is-good-enough at 78.6% LOO — a genuine zero-shot routing signal nobody else has.
 - **Materialization overhead is a non-issue** (~50–60 ms, <1% per forward), so the runtime-LoRA story is technically credible.
-- **What exists as code:** typed `src/modelrouter/{routing,dispatch,runtime,eval,data,tracing,refit}` modules, HF backend, vLLM backend stub, FastAPI OpenAI-compatible gateway stub, Oracle builder, kill-criteria checker, CI + Docker skeletons, two reproducible experiments.
+- **What exists as code:** typed `src/modelrouter/{routing,dispatch,runtime,backends,eval,data,tracing,refit}` modules, HF backend, experimental vLLM backend, production OpenAI-compatible gateway in `serve.py`, a `scoring_gateway` demo, Oracle builder, kill-criteria checker, CI + Docker skeletons, two reproducible experiments.
 
 **Strategic implication:** the near-term product is a **known-skill router** (caller supplies or route implies the task), not a magic universal router. That is also exactly how real customers integrate (per-endpoint/per-route policies), so it is a feature, not a concession.
 
@@ -36,7 +36,7 @@
 |---|---|---|
 | Candidate pool | Frontier/commercial API models only | Commercial APIs **plus your own LoRA-served open models** — the cheap tier can be a model you own at marginal GPU cost |
 | Quality grounding | Ramp's internal benchmark | **Your** private oracle built from your traffic + graders, versioned and re-runnable |
-| Adapter story | None | Runtime LoRA materialization from a shared task latent — one artifact serves N tasks × M base sizes; new task = JSONL + refit, no per-task deployment |
+| Adapter story | None | Runtime LoRA materialization from a shared task latent — one base-specific artifact serves N tasks on that base; a new task refits the alignment on an existing base without per-task deployment |
 | Deployment | Ramp's cloud | Self-hosted / VPC (data never leaves), OSS core |
 | Routing signal | Proprietary | Open, inspectable routers (score / prompt-embedding / task-latent `z`), retrainable on your labels |
 | Zero-shot task routing | — | `z`-latent predicts base suitability for *unseen tasks* (78.6% LOO) — unique research moat |
@@ -65,10 +65,10 @@ client ── OpenAI SDK ──► Gateway ──► Policy Engine ──► Rou
                           └────────► Trace Journal (JSONL → Kafka/Redpanda → ClickHouse)
 ```
 
-- **Gateway** (`runtime.Gateway`, exists as FastAPI stub): harden into the data-plane entry — authn (API keys), per-route config resolution, streaming, retries/fallbacks, prompt-cache lookup, small-batch coalescing window.
+- **Gateway** (`serve.create_production_app`): production OpenAI-compatible data-plane entry — authn (API keys), per-route config resolution, retries/fallbacks. `scoring_gateway` is a routing-logic demo, not production. Streaming, prompt-cache lookup, and small-batch coalescing remain future work.
 - **Policy engine** (`dispatch`): already has floor/cascade/constraint policies; extend to full constrained min-cost solve over the candidate set with per-route quality bars and fallback chains; hot-reload from control plane.
 - **Routers** (`routing`): production hot path uses `PromptEmbeddingRouter` (no candidate forward pass) + `TaskClassifier` only where the route allows it; `ScoreRouter` runs offline/shadow to generate labels; `LatentRouter` prices new tasks before any traffic.
-- **Backends** (`runtime`): finish `VLLMBackend` (PEFT export + `LoRARequest` hot-swap + (base,task) adapter LRU — kill criterion 3: swap <10% of median latency); add a **commercial-API backend** via LiteLLM so every candidate is uniform behind the `Backend` seam.
+- **Backends** (`runtime`, `backends`): `LiteLLMBackend` (commercial APIs) and `PortalLocalBackend` (HF + PorTAL hot-swap) are wired. `VLLMBackend` is also wired (PEFT export + `LoRARequest` hot-swap) but experimental and not yet load-tested against kill criterion 3 (swap <10% of median latency). Remaining work: `(base,task)` adapter LRU and hardening.
 - **Oracle** (`eval.Oracle`): becomes the control-plane batch job — continuously re-evaluate registered candidates on the versioned private benchmark, refresh router weights, publish to gateway.
 - **Trace journal** (`tracing`): JSONL locally → Kafka/Redpanda → ClickHouse; this table is simultaneously the observability store *and* the router-retraining dataset (Ramp's key loop).
 - **Caches/queues:** prompt/prefix cache (vLLM native prefix caching + gateway-level exact/semantic response cache in Redis), adapter LRU per GPU, batching window per backend, retry queue for fallbacks.

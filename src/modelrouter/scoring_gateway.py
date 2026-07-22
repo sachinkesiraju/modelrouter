@@ -1,4 +1,7 @@
-"""OpenAI-compatible gateway: classify task -> route -> materialize -> score/answer.
+"""Scoring-only demo gateway: classify task -> route -> score a multiple-choice answer.
+
+This is a test/demo app for the routing logic, not the production server.
+For production use ``modelrouter.serve`` (``serve.py::create_production_app``).
 
 Runs with any object satisfying the small ``ScoringBackend`` protocol, so unit
 tests can exercise the full route with a mock backend and no model download.

@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from portallib import ChoiceExample
 
 from modelrouter.dispatch import BaseSpec
-from modelrouter.gateway import create_app
+from modelrouter.scoring_gateway import create_app
 from modelrouter.tracing import TraceJournal
 
 

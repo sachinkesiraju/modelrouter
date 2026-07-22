@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 import joblib
 import numpy as np
@@ -136,7 +137,7 @@ class TaskClassifier:
 
     encoder_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     model: LogisticRegression = field(default_factory=lambda: LogisticRegression(max_iter=2000))
-    _encoder: object = field(default=None, repr=False)
+    _encoder: Any = field(default=None, repr=False)
 
     def _encode(self, prompts: list[str]) -> np.ndarray:
         if self._encoder is None:
