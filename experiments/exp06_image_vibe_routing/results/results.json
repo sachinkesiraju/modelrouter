@@ -1,0 +1,135 @@
+{
+  "n_train": 1200,
+  "n_val": 400,
+  "n_test": 400,
+  "models": [
+    "generic_sd",
+    "anime_sdxl",
+    "realistic_sdxl",
+    "ideogram",
+    "dalle3"
+  ],
+  "costs": {
+    "generic_sd": 0.05,
+    "anime_sdxl": 0.1,
+    "realistic_sdxl": 0.2,
+    "ideogram": 0.3,
+    "dalle3": 0.5
+  },
+  "capable": "dalle3",
+  "cheap": "generic_sd",
+  "policies": [
+    {
+      "name": "always_cheap",
+      "accuracy": 0.2075,
+      "cost": 0.05,
+      "savings": 0.9,
+      "drop_vs_capable": 0.0975,
+      "routed_cheap_frac": 1.0
+    },
+    {
+      "name": "always_capable",
+      "accuracy": 0.305,
+      "cost": 0.5,
+      "savings": 0.0,
+      "drop_vs_capable": 0.0,
+      "routed_cheap_frac": 0.0
+    },
+    {
+      "name": "oracle",
+      "accuracy": 1.0,
+      "cost": 0.264125,
+      "savings": 0.47175,
+      "drop_vs_capable": -0.6950000000000001,
+      "routed_cheap_frac": 0.2075
+    },
+    {
+      "name": "vibe_floor_1.0",
+      "accuracy": 0.67,
+      "cost": 0.293375,
+      "savings": 0.41325,
+      "drop_vs_capable": -0.36500000000000005,
+      "routed_cheap_frac": 0.0975
+    },
+    {
+      "name": "vibe_floor_1.05",
+      "accuracy": 0.67,
+      "cost": 0.293375,
+      "savings": 0.41325,
+      "drop_vs_capable": -0.36500000000000005,
+      "routed_cheap_frac": 0.0975
+    },
+    {
+      "name": "vibe_floor_1.1",
+      "accuracy": 0.67,
+      "cost": 0.293375,
+      "savings": 0.41325,
+      "drop_vs_capable": -0.36500000000000005,
+      "routed_cheap_frac": 0.0975
+    },
+    {
+      "name": "vibe_floor_1.15",
+      "accuracy": 0.67,
+      "cost": 0.291125,
+      "savings": 0.41774999999999995,
+      "drop_vs_capable": -0.36500000000000005,
+      "routed_cheap_frac": 0.1025
+    },
+    {
+      "name": "vibe_floor_1.2",
+      "accuracy": 0.665,
+      "cost": 0.28887500000000005,
+      "savings": 0.4222499999999999,
+      "drop_vs_capable": -0.36000000000000004,
+      "routed_cheap_frac": 0.1075
+    },
+    {
+      "name": "vibe_floor_1.3",
+      "accuracy": 0.665,
+      "cost": 0.28887500000000005,
+      "savings": 0.4222499999999999,
+      "drop_vs_capable": -0.36000000000000004,
+      "routed_cheap_frac": 0.1075
+    },
+    {
+      "name": "vibe_floor_1.5",
+      "accuracy": 0.6725,
+      "cost": 0.26975,
+      "savings": 0.4605,
+      "drop_vs_capable": -0.3675,
+      "routed_cheap_frac": 0.15
+    },
+    {
+      "name": "vibe_floor_2.0",
+      "accuracy": 0.6525,
+      "cost": 0.19549999999999998,
+      "savings": 0.609,
+      "drop_vs_capable": -0.3475,
+      "routed_cheap_frac": 0.315
+    },
+    {
+      "name": "vibe_floor_valtuned_1.5",
+      "accuracy": 0.6725,
+      "cost": 0.26975,
+      "savings": 0.4605,
+      "drop_vs_capable": -0.3675,
+      "routed_cheap_frac": 0.15
+    }
+  ],
+  "val_tuned_floor": 1.5,
+  "val_tuned_ci": {
+    "accuracy": [
+      0.6273749999999999,
+      0.7175
+    ],
+    "savings": [
+      0.42749375,
+      0.4930125
+    ]
+  },
+  "kill_criteria": {
+    "savings_ok": true,
+    "quality_ok": true,
+    "passed": true
+  }
+}

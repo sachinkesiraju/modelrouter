@@ -1,6 +1,7 @@
 """modelrouter: cost-aware dispatch across bases with runtime-materialized PorTAL adapters."""
 
 from .dispatch import BaseSpec, CascadePolicy, FloorPolicy, RoutingDecision
+from .image_routing import ImageVibeClassifier, ImageVibeRouter
 from .routing import LatentRouter, PromptEmbeddingRouter, ScoreRouter, TaskClassifier
 
 __all__ = [
@@ -8,6 +9,8 @@ __all__ = [
     "CascadePolicy",
     "FloorPolicy",
     "RoutingDecision",
+    "ImageVibeClassifier",
+    "ImageVibeRouter",
     "LatentRouter",
     "PromptEmbeddingRouter",
     "ScoreRouter",

@@ -14,6 +14,8 @@ Inspired by [Ramp Router](https://ramp.com/router) and Ramp's work on [cost-effi
 
 The self-hosted ladder is Qwen3 0.6B / 1.7B / 4B; allowing a 2.8 point drop raises its savings to 58%, or 51.5% when costs are GPU-amortized from measured tokens/sec on an A10G. The OpenAI ladder is gpt-5.4-nano / gpt-5.4-mini / gpt-5.6, priced at real per-request API cost. The same router also cut spend by 40.7% at a 3.3 point drop on free-form GSM8K over a Together AI ladder.
 
+A prototype image-generation router (`modelrouter.image_routing`) routes text-to-image prompts to the cheapest model that matches the desired **ability/vibe** (anime, photorealism, logos, ...). On the synthetic prototype benchmark it saves 46% versus the most expensive model while *outperforming* it, because specialists beat the generalist on their home vibes. See `docs/image_router_design.md` and `experiments/exp06_image_vibe_routing/`.
+
 Measured on 14 tasks / 1,230 held-out rows:
 
 | Result | Value |
